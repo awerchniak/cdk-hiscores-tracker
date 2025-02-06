@@ -79,6 +79,7 @@ def successful_response_text():
         -1,-1
         -1,-1
         -1,-1
+        -1,-1
         238864,132
         -1,-1
         -1,-1
@@ -116,6 +117,7 @@ def successful_response_text():
         -1,-1
         -1,-1
         278341,6
+        -1,-1
         -1,-1
         -1,-1
         -1,-1
@@ -176,6 +178,7 @@ def successful_parsed_response(player_name):
             "ClueScrolls_master": {"kc": -1, "rnk": -1},
             "ClueScrolls_medium": {"kc": 5, "rnk": 636404},
             "ColosseumGlory": {"kc": -1, "rnk": -1},
+            "CollectionsLogged": {"kc": -1, "rnk": -1},
             "CommanderZilyana": {"kc": -1, "rnk": -1},
             "CorporealBeast": {"kc": -1, "rnk": -1},
             "CrazyArchaeologist": {"kc": -1, "rnk": -1},
@@ -216,6 +219,7 @@ def successful_parsed_response(player_name):
             "TheCorruptedGauntlet": {"kc": -1, "rnk": -1},
             "TheHueycoatl": {"kc": -1, "rnk": -1},
             "TheLeviathan": {"kc": -1, "rnk": -1},
+            "TheRoyalTitans": {"kc": -1, "rnk": -1},
             "TheWhisperer": {"kc": -1, "rnk": -1},
             "TheGauntlet": {"kc": -1, "rnk": -1},
             "TheatreofBlood": {"kc": -1, "rnk": -1},
