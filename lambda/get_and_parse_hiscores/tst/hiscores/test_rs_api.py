@@ -138,6 +138,7 @@ def successful_response_text():
         -1,-1
         -1,-1
         -1,-1
+        -1,-1
         34195,177
         232831,51
         """
@@ -234,6 +235,7 @@ def successful_parsed_response(player_name):
             "Vettion": {"kc": -1, "rnk": -1},
             "Vorkath": {"kc": -1, "rnk": -1},
             "Wintertodt": {"kc": -1, "rnk": -1},
+            "Yama": {"kc": -1, "rnk": -1},
             "Zalcano": {"kc": 177, "rnk": 34195},
             "Zulrah": {"kc": 51, "rnk": 232831},
         },

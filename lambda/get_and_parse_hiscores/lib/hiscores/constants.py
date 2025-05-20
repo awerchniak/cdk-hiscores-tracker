@@ -113,6 +113,7 @@ HISCORES_RESPONSE_ACTIVITIES: List[str] = [
     "Vettion",
     "Vorkath",
     "Wintertodt",
+    "Yama",
     "Zalcano",
     "Zulrah",
 ]
