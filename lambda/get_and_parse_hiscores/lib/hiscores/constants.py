@@ -71,6 +71,7 @@ HISCORES_RESPONSE_ACTIVITIES: List[str] = [
     "DagannothRex",
     "DagannothSupreme",
     "DerangedArchaeologist",
+    "DoomOfMokhaiotl",
     "DukeSucellus",
     "GeneralGraardor",
     "GiantMole",
