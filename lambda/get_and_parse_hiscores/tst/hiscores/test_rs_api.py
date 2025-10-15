@@ -62,6 +62,7 @@ def successful_response_text():
         -1,-1
         -1,-1
         -1,-1
+        -1,-1
         420501,42
         1099732,1
         643745,4
@@ -193,6 +194,7 @@ def successful_parsed_response(player_name):
             "DukeSucellus": {"kc": -1, "rnk": -1},
             "GeneralGraardor": {"kc": -1, "rnk": -1},
             "GiantMole": {"kc": -1, "rnk": -1},
+            "GridPoints": {"kc": -1, "rnk": -1},
             "GrotesqueGuardians": {"kc": -1, "rnk": -1},
             "GuardiansOfTheRift": {"kc": -1, "rnk": -1},
             "Hespori": {"kc": 37, "rnk": 126798},
