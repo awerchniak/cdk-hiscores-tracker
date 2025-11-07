@@ -93,6 +93,7 @@ HISCORES_RESPONSE_ACTIVITIES: List[str] = [
     "Sarachnis",
     "Scorpia",
     "Scurrius",
+    "ShellbaneGryphon",
     "Skotizo",
     "SolHeredit",
     "Spindel",

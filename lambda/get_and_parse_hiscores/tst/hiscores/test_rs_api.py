@@ -118,6 +118,7 @@ def successful_response_text():
         -1,-1
         -1,-1
         -1,-1
+        -1,-1
         278341,6
         -1,-1
         -1,-1
@@ -216,6 +217,7 @@ def successful_parsed_response(player_name):
             "Sarachnis": {"kc": -1, "rnk": -1},
             "Scorpia": {"kc": -1, "rnk": -1},
             "Scurrius": {"kc": -1, "rnk": -1},
+            "ShellbaneGryphon": {"kc": -1, "rnk": -1},
             "Skotizo": {"kc": 6, "rnk": 278341},
             "Spindel": {"kc": -1, "rnk": -1},
             "SolHeredit": {"kc": -1, "rnk": -1},
