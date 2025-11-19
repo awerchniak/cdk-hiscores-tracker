@@ -26,6 +26,7 @@ HISCORES_RESPONSE_SKILLS: List[str] = [
     "Runecrafting",
     "Hunter",
     "Construction",
+    "Sailing",
 ]
 
 # Reformatted to valid MySQL columns:

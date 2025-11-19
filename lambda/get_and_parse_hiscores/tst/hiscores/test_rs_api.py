@@ -56,6 +56,7 @@ def successful_response_text():
         303083,66,525955
         366373,73,1043046
         394233,75,1217135
+        -1,1,0
         -1,-1
         -1,-1
         -1,-1
@@ -265,6 +266,7 @@ def successful_parsed_response(player_name):
             "Prayer": {"lvl": 74, "rnk": 487677, "xp": 1113801},
             "Ranged": {"lvl": 88, "rnk": 642452, "xp": 4644869},
             "Runecrafting": {"lvl": 66, "rnk": 303083, "xp": 525955},
+            "Sailing": {"lvl": 1, "rnk": -1, "xp": 0},
             "Slayer": {"lvl": 82, "rnk": 428416, "xp": 2596132},
             "Smithing": {"lvl": 72, "rnk": 469361, "xp": 900892},
             "Strength": {"lvl": 90, "rnk": 653510, "xp": 5403638},
