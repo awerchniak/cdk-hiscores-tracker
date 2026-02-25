@@ -103,6 +103,7 @@ def successful_response_text():
         -1,-1
         -1,-1
         -1,-1
+        -1,-1
         126798,37
         -1,-1
         -1,-1
@@ -163,6 +164,7 @@ def successful_parsed_response(player_name):
             "Araxxor": {"kc": -1, "rnk": -1},
             "Artio": {"kc": -1, "rnk": -1},
             "BarrowsChests": {"kc": 132, "rnk": 238864},
+            "Brutus": {"kc": -1, "rnk": -1},
             "BountyHunter_Hunter": {"kc": -1, "rnk": -1},
             "BountyHunter_Rogue": {"kc": -1, "rnk": -1},
             "BountyHunter_Hunter_Legacy": {"kc": -1, "rnk": -1},
