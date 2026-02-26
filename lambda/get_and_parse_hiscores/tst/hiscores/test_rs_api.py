@@ -1,5 +1,5 @@
 import datetime
-import inspect
+import json
 from unittest import mock
 
 import get_and_parse_hiscores.lib.hiscores.rs_api as rs_api
@@ -18,135 +18,296 @@ class MockRequestsGet(object):
 
     def __call__(self, api, params, *args, **kwargs):
         response = requests.Response()
-        response._content = self._text.encode()
+        response._content = self._text.encode("utf-8")
         response.status_code = self._status_code
         response.elapsed = self._elapsed
         response.reason = self._reason
-
+        response.encoding = "utf-8"
+        response.headers["Content-Type"] = "application/json"
         response.request = requests.Request()
         response.request.url = api + "?player=" + params["player"]
 
         return response
 
 
-def successful_response_text():
-    return inspect.cleandoc(
-        """
-        417625,1775,51739960
-        536659,85,3273304
-        620289,80,2054713
-        653510,90,5403638
-        599986,91,6262073
-        642452,88,4644869
-        487677,74,1113801
-        516330,90,5719009
-        1038967,70,751496
-        817948,70,790087
-        787621,70,754410
-        738328,71,814511
-        855431,70,745340
-        574399,71,834875
-        469361,72,900892
-        279024,80,1986418
-        411567,71,872644
-        388560,73,1077529
-        469001,70,797108
-        428416,82,2596132
-        177812,93,7560975
-        303083,66,525955
-        366373,73,1043046
-        394233,75,1217135
-        -1,1,0
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        420501,42
-        1099732,1
-        643745,4
-        636404,5
-        337647,29
-        313798,3
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        238864,132
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        126798,37
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        278341,6
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        -1,-1
-        34195,177
-        232831,51
-        """
+def successful_response_text(player_name):
+    return json.dumps(
+        {
+            "name": player_name,
+            "skills": [
+                {
+                    "id": 0,
+                    "name": "Overall",
+                    "rank": 417625,
+                    "level": 1775,
+                    "xp": 51739960,
+                },
+                {"id": 1, "name": "Attack", "rank": 536659, "level": 85, "xp": 3273304},
+                {
+                    "id": 2,
+                    "name": "Defence",
+                    "rank": 620289,
+                    "level": 80,
+                    "xp": 2054713,
+                },
+                {
+                    "id": 3,
+                    "name": "Strength",
+                    "rank": 653510,
+                    "level": 90,
+                    "xp": 5403638,
+                },
+                {
+                    "id": 4,
+                    "name": "Hitpoints",
+                    "rank": 599986,
+                    "level": 91,
+                    "xp": 6262073,
+                },
+                {"id": 5, "name": "Ranged", "rank": 642452, "level": 88, "xp": 4644869},
+                {"id": 6, "name": "Prayer", "rank": 487677, "level": 74, "xp": 1113801},
+                {"id": 7, "name": "Magic", "rank": 516330, "level": 90, "xp": 5719009},
+                {
+                    "id": 8,
+                    "name": "Cooking",
+                    "rank": 1038967,
+                    "level": 70,
+                    "xp": 751496,
+                },
+                {
+                    "id": 9,
+                    "name": "Woodcutting",
+                    "rank": 817948,
+                    "level": 70,
+                    "xp": 790087,
+                },
+                {
+                    "id": 10,
+                    "name": "Fletching",
+                    "rank": 787621,
+                    "level": 70,
+                    "xp": 754410,
+                },
+                {
+                    "id": 11,
+                    "name": "Fishing",
+                    "rank": 738328,
+                    "level": 71,
+                    "xp": 814511,
+                },
+                {
+                    "id": 12,
+                    "name": "Firemaking",
+                    "rank": 855431,
+                    "level": 70,
+                    "xp": 745340,
+                },
+                {
+                    "id": 13,
+                    "name": "Crafting",
+                    "rank": 574399,
+                    "level": 71,
+                    "xp": 834875,
+                },
+                {
+                    "id": 14,
+                    "name": "Smithing",
+                    "rank": 469361,
+                    "level": 72,
+                    "xp": 900892,
+                },
+                {
+                    "id": 15,
+                    "name": "Mining",
+                    "rank": 279024,
+                    "level": 80,
+                    "xp": 1986418,
+                },
+                {
+                    "id": 16,
+                    "name": "Herblore",
+                    "rank": 411567,
+                    "level": 71,
+                    "xp": 872644,
+                },
+                {
+                    "id": 17,
+                    "name": "Agility",
+                    "rank": 388560,
+                    "level": 73,
+                    "xp": 1077529,
+                },
+                {
+                    "id": 18,
+                    "name": "Thieving",
+                    "rank": 469001,
+                    "level": 70,
+                    "xp": 797108,
+                },
+                {
+                    "id": 19,
+                    "name": "Slayer",
+                    "rank": 428416,
+                    "level": 82,
+                    "xp": 2596132,
+                },
+                {
+                    "id": 20,
+                    "name": "Farming",
+                    "rank": 177812,
+                    "level": 93,
+                    "xp": 7560975,
+                },
+                {
+                    "id": 21,
+                    "name": "Runecrafting",
+                    "rank": 303083,
+                    "level": 66,
+                    "xp": 525955,
+                },
+                {
+                    "id": 22,
+                    "name": "Hunter",
+                    "rank": 366373,
+                    "level": 73,
+                    "xp": 1043046,
+                },
+                {
+                    "id": 23,
+                    "name": "Construction",
+                    "rank": 394233,
+                    "level": 75,
+                    "xp": 1217135,
+                },
+                {"id": 24, "name": "Sailing", "rank": -1, "level": 1, "xp": 0},
+            ],
+            "activities": [
+                {"id": 0, "name": "Grid Points", "rank": -1, "score": -1},
+                {"id": 1, "name": "League Points", "rank": -1, "score": -1},
+                {"id": 2, "name": "Deadman Points", "rank": -1, "score": -1},
+                {"id": 3, "name": "Bounty Hunter - Hunter", "rank": -1, "score": -1},
+                {"id": 4, "name": "Bounty Hunter - Rogue", "rank": -1, "score": -1},
+                {
+                    "id": 5,
+                    "name": "Bounty Hunter (Legacy) - Hunter",
+                    "rank": -1,
+                    "score": -1,
+                },
+                {
+                    "id": 6,
+                    "name": "Bounty Hunter (Legacy) - Rogue",
+                    "rank": -1,
+                    "score": -1,
+                },
+                {"id": 7, "name": "Clue Scrolls (all)", "rank": 420501, "score": 42},
+                {
+                    "id": 8,
+                    "name": "Clue Scrolls (beginner)",
+                    "rank": 1099732,
+                    "score": 1,
+                },
+                {"id": 9, "name": "Clue Scrolls (easy)", "rank": 643745, "score": 4},
+                {"id": 10, "name": "Clue Scrolls (medium)", "rank": 636404, "score": 5},
+                {"id": 11, "name": "Clue Scrolls (hard)", "rank": 337647, "score": 29},
+                {"id": 12, "name": "Clue Scrolls (elite)", "rank": 313798, "score": 3},
+                {"id": 13, "name": "Clue Scrolls (master)", "rank": -1, "score": -1},
+                {"id": 14, "name": "LMS - Rank", "rank": -1, "score": -1},
+                {"id": 15, "name": "PvP Arena - Rank", "rank": -1, "score": -1},
+                {"id": 16, "name": "Soul Wars Zeal", "rank": -1, "score": -1},
+                {"id": 17, "name": "Rifts closed", "rank": -1, "score": -1},
+                {"id": 18, "name": "Colosseum Glory", "rank": -1, "score": -1},
+                {"id": 19, "name": "Collections Logged", "rank": -1, "score": -1},
+                {"id": 20, "name": "Abyssal Sire", "rank": -1, "score": -1},
+                {"id": 21, "name": "Alchemical Hydra", "rank": -1, "score": -1},
+                {"id": 22, "name": "Amoxliatl", "rank": -1, "score": -1},
+                {"id": 23, "name": "Araxxor", "rank": -1, "score": -1},
+                {"id": 24, "name": "Artio", "rank": -1, "score": -1},
+                {"id": 25, "name": "Barrows Chests", "rank": 238864, "score": 132},
+                {"id": 26, "name": "Brutus", "rank": -1, "score": -1},
+                {"id": 27, "name": "Bryophyta", "rank": -1, "score": -1},
+                {"id": 28, "name": "Callisto", "rank": -1, "score": -1},
+                {"id": 29, "name": "Calvar'ion", "rank": -1, "score": -1},
+                {"id": 30, "name": "Cerberus", "rank": -1, "score": -1},
+                {"id": 31, "name": "Chambers of Xeric", "rank": -1, "score": -1},
+                {
+                    "id": 32,
+                    "name": "Chambers of Xeric: Challenge Mode",
+                    "rank": -1,
+                    "score": -1,
+                },
+                {"id": 33, "name": "Chaos Elemental", "rank": -1, "score": -1},
+                {"id": 34, "name": "Chaos Fanatic", "rank": -1, "score": -1},
+                {"id": 35, "name": "Commander Zilyana", "rank": -1, "score": -1},
+                {"id": 36, "name": "Corporeal Beast", "rank": -1, "score": -1},
+                {"id": 37, "name": "Crazy Archaeologist", "rank": -1, "score": -1},
+                {"id": 38, "name": "Dagannoth Prime", "rank": -1, "score": -1},
+                {"id": 39, "name": "Dagannoth Rex", "rank": -1, "score": -1},
+                {"id": 40, "name": "Dagannoth Supreme", "rank": -1, "score": -1},
+                {"id": 41, "name": "Deranged Archaeologist", "rank": -1, "score": -1},
+                {"id": 42, "name": "Doom of Mokhaiotl", "rank": -1, "score": -1},
+                {"id": 43, "name": "Duke Sucellus", "rank": -1, "score": -1},
+                {"id": 44, "name": "General Graardor", "rank": -1, "score": -1},
+                {"id": 45, "name": "Giant Mole", "rank": -1, "score": -1},
+                {"id": 46, "name": "Grotesque Guardians", "rank": -1, "score": -1},
+                {"id": 47, "name": "Hespori", "rank": 126798, "score": 37},
+                {"id": 48, "name": "Kalphite Queen", "rank": -1, "score": -1},
+                {"id": 49, "name": "King Black Dragon", "rank": -1, "score": -1},
+                {"id": 50, "name": "Kraken", "rank": -1, "score": -1},
+                {"id": 51, "name": "Kree'Arra", "rank": -1, "score": -1},
+                {"id": 52, "name": "K'ril Tsutsaroth", "rank": -1, "score": -1},
+                {"id": 53, "name": "Lunar Chests", "rank": -1, "score": -1},
+                {"id": 54, "name": "Mimic", "rank": -1, "score": -1},
+                {"id": 55, "name": "Nex", "rank": -1, "score": -1},
+                {"id": 56, "name": "Nightmare", "rank": -1, "score": -1},
+                {"id": 57, "name": "Phosani's Nightmare", "rank": -1, "score": -1},
+                {"id": 58, "name": "Obor", "rank": -1, "score": -1},
+                {"id": 59, "name": "Phantom Muspah", "rank": -1, "score": -1},
+                {"id": 60, "name": "Sarachnis", "rank": -1, "score": -1},
+                {"id": 61, "name": "Scorpia", "rank": -1, "score": -1},
+                {"id": 62, "name": "Scurrius", "rank": -1, "score": -1},
+                {"id": 63, "name": "Shellbane Gryphon", "rank": -1, "score": -1},
+                {"id": 64, "name": "Skotizo", "rank": 278341, "score": 6},
+                {"id": 65, "name": "Sol Heredit", "rank": -1, "score": -1},
+                {"id": 66, "name": "Spindel", "rank": -1, "score": -1},
+                {"id": 67, "name": "Tempoross", "rank": -1, "score": -1},
+                {"id": 68, "name": "The Gauntlet", "rank": -1, "score": -1},
+                {"id": 69, "name": "The Corrupted Gauntlet", "rank": -1, "score": -1},
+                {"id": 70, "name": "The Hueycoatl", "rank": -1, "score": -1},
+                {"id": 71, "name": "The Leviathan", "rank": -1, "score": -1},
+                {"id": 72, "name": "The Royal Titans", "rank": -1, "score": -1},
+                {"id": 73, "name": "The Whisperer", "rank": -1, "score": -1},
+                {"id": 74, "name": "Theatre of Blood", "rank": -1, "score": -1},
+                {
+                    "id": 75,
+                    "name": "Theatre of Blood: Hard Mode",
+                    "rank": -1,
+                    "score": -1,
+                },
+                {
+                    "id": 76,
+                    "name": "Thermonuclear Smoke Devil",
+                    "rank": -1,
+                    "score": -1,
+                },
+                {"id": 77, "name": "Tombs of Amascut", "rank": -1, "score": -1},
+                {
+                    "id": 78,
+                    "name": "Tombs of Amascut: Expert Mode",
+                    "rank": -1,
+                    "score": -1,
+                },
+                {"id": 79, "name": "TzKal-Zuk", "rank": -1, "score": -1},
+                {"id": 80, "name": "TzTok-Jad", "rank": -1, "score": -1},
+                {"id": 81, "name": "Vardorvis", "rank": -1, "score": -1},
+                {"id": 82, "name": "Venenatis", "rank": -1, "score": -1},
+                {"id": 83, "name": "Vet'ion", "rank": -1, "score": -1},
+                {"id": 84, "name": "Vorkath", "rank": -1, "score": -1},
+                {"id": 85, "name": "Wintertodt", "rank": -1, "score": -1},
+                {"id": 86, "name": "Yama", "rank": -1, "score": -1},
+                {"id": 87, "name": "Zalcano", "rank": 34195, "score": 177},
+                {"id": 88, "name": "Zulrah", "rank": 232831, "score": 51},
+            ],
+        }
     )
 
 
@@ -286,16 +447,15 @@ def successful_parsed_response(player_name):
         ("IronPlinius", rs_api.HISCORES_IRONMAN_API),
     ],
 )
-@mock.patch(
-    f"{rs_api.__name__}.requests.get",
-    side_effect=MockRequestsGet(
-        text=successful_response_text(),
+@mock.patch(f"{rs_api.__name__}.requests.get")
+def test_get_parse_hiscores_valid(mock_get, player, api):
+    mock_get.side_effect = MockRequestsGet(
+        text=successful_response_text(player),
         status_code=200,
         elapsed=5,
         reason="OK",
-    ),
-)
-def test_get_parse_hiscores_valid(mock_get, player, api):
+    )
+
     response = rs_api.request_hiscores(player)
     mock_get.assert_called_once_with(api, params=dict(player=player), timeout=mock.ANY)
 
@@ -303,33 +463,6 @@ def test_get_parse_hiscores_valid(mock_get, player, api):
     timestamp = payload.pop("timestamp")
     assert payload == successful_parsed_response(player_name=player)
     assert timestamp is not None
-
-
-def test_process_hiscores_response_invalid_query(mocker, player_name):
-    mock_response = mocker.Mock()
-    mock_request = mocker.Mock()
-    mock_response.request = mock_request
-    mock_request.url = rs_api.HISCORES_API + "?username=" + player_name
-
-    mocker.patch(f"{rs_api.__name__}.sanitize_hiscores_stats")
-    with pytest.raises(ValueError):
-        rs_api.process_hiscores_response(mock_response)
-
-
-def test_sanitize_hiscores_stats_invalid_skill_line():
-    invalid_skill_line_schema = successful_response_text().replace(
-        "417625,1775,51739960", "-1,-1"
-    )
-    with pytest.raises(ValueError):
-        rs_api.sanitize_hiscores_stats(invalid_skill_line_schema)
-
-
-def test_sanitize_hiscores_stats_invalid_activities_line():
-    invalid_activity_line_schema = successful_response_text().replace(
-        "-1,-1", "417625,1775,51739960"
-    )
-    with pytest.raises(ValueError):
-        rs_api.sanitize_hiscores_stats(invalid_activity_line_schema)
 
 
 @mock.patch(
@@ -370,3 +503,41 @@ def test_request_hiscores_error(mock_get, player_name):
     with pytest.raises(ValueError):
         rs_api.request_hiscores(player_name)
     mock_get.assert_called_once()
+
+
+@mock.patch(f"{rs_api.__name__}.requests.get")
+def test_process_hiscores_response_invalid_json(mock_get, player_name):
+    invalid_text = "The Highscores are currently undergoing maintenance."
+    mock_get.side_effect = MockRequestsGet(
+        text=invalid_text,
+        status_code=200,
+        elapsed=1,
+        reason="OK",
+    )
+
+    response = rs_api.request_hiscores(player_name)
+
+    with pytest.raises(rs_api.HiscoresDownError) as excinfo:
+        rs_api.process_hiscores_response(response)
+
+    assert invalid_text in str(excinfo.value)
+    assert "invalid JSON" in str(excinfo.value)
+
+
+@mock.patch(f"{rs_api.__name__}.requests.get")
+def test_process_hiscores_response_empty_json(mock_get, player_name):
+    unexpected_text = "{}"
+    mock_get.side_effect = MockRequestsGet(
+        text=unexpected_text,  # valid json but not what we expect
+        status_code=200,
+        elapsed=1,
+        reason="OK",
+    )
+
+    response = rs_api.request_hiscores(player_name)
+
+    with pytest.raises(rs_api.HiscoresDownError) as excinfo:
+        rs_api.process_hiscores_response(response)
+
+    assert unexpected_text in str(excinfo.value)
+    assert "unexpected JSON" in str(excinfo.value)

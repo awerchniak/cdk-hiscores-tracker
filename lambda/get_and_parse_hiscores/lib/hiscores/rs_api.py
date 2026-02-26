@@ -1,29 +1,23 @@
 """Module for interacting with OSRS APIs."""
+import json
 import logging
+import re
 from datetime import datetime, timedelta
-from typing import List
-from urllib.parse import urlparse
 
 import requests
 
-from .constants import (
-    HISCORE_RESPONSE_ACTIVITY_COLS,
-    HISCORES_RESPONSE_ACTIVITIES,
-    HISCORES_RESPONSE_SKILL_COLS,
-    HISCORES_RESPONSE_SKILLS,
-)
+from .constants import LEGACY_ACTIVITY_MAP, LEGACY_SKILL_MAP
 
 logger = logging.getLogger()
 
-HISCORES_API = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.ws"
+HISCORES_API = "https://secure.runescape.com/m=hiscore_oldschool/index_lite.json"
 HISCORES_IRONMAN_API = (
-    "https://secure.runescape.com/m=hiscore_oldschool_ironman/index_lite.ws"
+    "https://secure.runescape.com/m=hiscore_oldschool_ironman/index_lite.json"
 )
 
 __all__ = [
     "InvalidSchemaError",
     "request_hiscores",
-    "sanitize_hiscores_stats",
     "process_hiscores_response",
 ]
 
@@ -36,30 +30,35 @@ class HiscoresDownError(Exception):
     """Indicates an error connecting with the OSRS HiScores API."""
 
 
+def _safe_dynamodb_string(key: str) -> str:
+    """
+    Strip any disallowed characters for DynamoDB attribute names.
+    Allowed: a-z, A-Z, 0-9, underscore (_), dot (.), and hyphen (-).
+    """
+
+    # Replace any character NOT in the allowed set with an underscore
+    safe_key = re.sub(r"[^a-zA-Z0-9._-]", "_", key)
+
+    # DynamoDB attribute names must be between 1 and 255 characters
+    return safe_key[:255]
+
+
+def _safe_skill_name(skill_name: str) -> str:
+    """Translate a skill name to a safe value for our DDB table."""
+    candidate = LEGACY_SKILL_MAP.get(skill_name, skill_name)
+    return _safe_dynamodb_string(candidate)
+
+
+def _safe_activity_name(activity_name: str) -> str:
+    """Translate an activity name to a safe value for our DDB table."""
+    candidate = LEGACY_ACTIVITY_MAP.get(activity_name, activity_name)
+    return _safe_dynamodb_string(candidate)
+
+
 def get_hiscores_api(player: str) -> str:
     if "iron" in player.lower():
         return HISCORES_IRONMAN_API
     return HISCORES_API
-
-
-def _parse_hiscores_response_line(line: str, schema: List[str]) -> dict:
-    """Parse a single line of a hiscores API response."""
-    split_line = line.split(",")
-    if len(schema) != len(split_line):
-        raise InvalidSchemaError(
-            f"Schema '{schema}' is invalid for line '{line}': must be same length."
-        )
-    return dict(zip(schema, map(int, split_line)))
-
-
-def _parse_skill_line(line: str) -> dict:
-    """Parse a CSV skill line from a hiscores response."""
-    return _parse_hiscores_response_line(line, HISCORES_RESPONSE_SKILL_COLS)
-
-
-def _parse_activity_line(line: str) -> dict:
-    """Parse a CSV activity line from a hiscores response."""
-    return _parse_hiscores_response_line(line, HISCORE_RESPONSE_ACTIVITY_COLS)
 
 
 def request_hiscores(
@@ -95,62 +94,47 @@ def request_hiscores(
     return response
 
 
-def sanitize_hiscores_stats(text: str) -> dict:
-    """Sanitize hiscore_oldscool API result text.
+def process_hiscores_response(response: requests.models.Response) -> dict:
+    """Read hiscores API response into human-readable format.
 
-    API documentation:
-    https://runescape.wiki/w/Application_programming_interface#Hiscores_Lite_2
+    Unfortunately, `RANK`, `LEVEL`, and `COUNT` are all reserved words in DynamoDB:
+    https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ReservedWords.html
 
+    This is why we use rnk, lvl, xp, kc.
+
+    TODO: create pydantic models instead of these typeless dicts
     """
 
-    # split string by line
-    lines = text.strip().split("\n")
-
-    if len(lines) != len(HISCORES_RESPONSE_SKILLS) + len(HISCORES_RESPONSE_ACTIVITIES):
-        logger.warning(
-            "HiScores response contains unexpected number of lines. Have the set of "
-            "skills or activities returned by the HiScores API changed recently? "
-            "Check https://runescape.wiki/w/Application_programming_interface#Old_School_Hiscores."  # noqa: E501
-        )
-
-    # skills are returned first
-    skill_lines = lines[: len(HISCORES_RESPONSE_SKILLS)]
-    # parse and label elements
     try:
-        skill_dict = dict(
-            zip(HISCORES_RESPONSE_SKILLS, map(_parse_skill_line, skill_lines))
-        )
-    except InvalidSchemaError as e:
-        raise ValueError("Expected skill line of API result is malformatted.") from e
+        payload = response.json()
+    except json.decoder.JSONDecodeError:
+        raise HiscoresDownError(f"Hiscores API returned invalid JSON: {response.text}")
 
-    # activities are returned second
-    activity_lines = lines[len(HISCORES_RESPONSE_SKILLS) :]
-    # parse and label elements
     try:
-        activity_dict = dict(
-            zip(
-                HISCORES_RESPONSE_ACTIVITIES,
-                map(_parse_activity_line, activity_lines),
+        processed_payload = dict()
+        processed_payload["player"] = payload["name"]
+
+        processed_payload["skills"] = dict()
+        for skill in payload["skills"]:
+            processed_payload["skills"][_safe_skill_name(skill["name"])] = dict(
+                rnk=skill["rank"],
+                lvl=skill["level"],
+                xp=skill["xp"],
             )
+
+        processed_payload["activities"] = dict()
+        for activity in payload["activities"]:
+            processed_payload["activities"][
+                _safe_activity_name(activity["name"])
+            ] = dict(
+                rnk=activity["rank"],
+                kc=activity["score"],
+            )
+    except (AttributeError, KeyError, TypeError):
+        raise HiscoresDownError(
+            f"Hiscores API returned unexpected JSON format: {response.text}"
         )
-    except InvalidSchemaError as e:
-        raise ValueError("Expected activity line of API result is malformatted.") from e
 
-    # return all information
-    return dict(skills=skill_dict, activities=activity_dict)
+    processed_payload["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
-def process_hiscores_response(response: requests.models.Response) -> dict:
-    """Read hiscores API response into human-readable format."""
-    # parse and label API response text
-    result: dict = sanitize_hiscores_stats(response.text)
-
-    # Add player name
-    query = urlparse(response.request.url).query.split("=")
-    if len(query) != 2 or query[0] != "player":
-        raise ValueError(f"Received invalid query in API result: {'='.join(query)}")
-    result["player"] = query[1].replace("+", " ")
-
-    # Add timestamp
-    result["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return result
+    return processed_payload
