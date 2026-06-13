@@ -56,6 +56,7 @@ class PipelineStack(Stack):
                 "Synth",
                 input=source,
                 commands=[
+                    ". ~/.nvm/nvm.sh && nvm install 18 && nvm alias default 18",
                     "npm install -g aws-cdk@2",
                     "pip install -r requirements.txt",
                     "cdk synth",
