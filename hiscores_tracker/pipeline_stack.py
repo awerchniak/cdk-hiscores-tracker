@@ -1,6 +1,7 @@
 import aws_cdk as cdk
 from aws_cdk import Stack
 from aws_cdk import aws_codebuild as codebuild
+from aws_cdk import aws_ssm as ssm
 from aws_cdk import pipelines
 from constructs import Construct
 
@@ -37,12 +38,9 @@ class PipelineStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs):
         super().__init__(scope, id, **kwargs)
 
-        connection_arn = self.node.try_get_context("github_connection_arn")
-        if not connection_arn:
-            raise ValueError(
-                "CDK context 'github_connection_arn' is required. "
-                "Add it to cdk.json or pass -c github_connection_arn=<arn>."
-            )
+        connection_arn = ssm.StringParameter.value_from_lookup(
+            self, "/hiscores-tracker/github-connection-arn"
+        )
 
         source = pipelines.CodePipelineSource.connection(
             "awerchniak/cdk-hiscores-tracker",
