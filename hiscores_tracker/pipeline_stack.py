@@ -45,7 +45,7 @@ class PipelineStack(Stack):
 
         source = pipelines.CodePipelineSource.connection(
             "awerchniak/cdk-hiscores-tracker",
-            "main",
+            "mainline",
             connection_arn=connection_arn,
         )
 
