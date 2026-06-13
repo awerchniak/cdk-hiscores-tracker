@@ -1,5 +1,6 @@
 import aws_cdk as cdk
 from aws_cdk import Stack
+from aws_cdk import aws_codebuild as codebuild
 from aws_cdk import pipelines
 from constructs import Construct
 
@@ -52,11 +53,15 @@ class PipelineStack(Stack):
         pipeline = pipelines.CodePipeline(
             self,
             "Pipeline",
+            code_build_defaults=pipelines.CodeBuildOptions(
+                partial_build_spec=codebuild.BuildSpec.from_object({
+                    "phases": {"install": {"commands": ["n 18"]}}
+                })
+            ),
             synth=pipelines.ShellStep(
                 "Synth",
                 input=source,
                 commands=[
-                    "n 18 && hash -r",
                     "npm install -g aws-cdk@2.0.0",
                     "pip install -r requirements.txt",
                     "cdk synth",
