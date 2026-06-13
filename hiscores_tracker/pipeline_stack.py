@@ -15,11 +15,18 @@ class HiscoresTrackerStage(cdk.Stage):
     def trigger_url(self):
         return self._trigger_url
 
-    def __init__(self, scope: Construct, id: str, **kwargs):
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        enabled: bool = True,
+        stack_name: str = None,
+        **kwargs,
+    ):
         super().__init__(scope, id, **kwargs)
-        # stack_name keeps updates in-place against the pre-existing CloudFormation stack
+        stack_kwargs = {"stack_name": stack_name} if stack_name is not None else {}
         stack = HiscoresTrackerStack(
-            self, "HiscoresTrackerStack", stack_name="HiscoresTrackerStack"
+            self, "HiscoresTrackerStack", enabled=enabled, **stack_kwargs
         )
         self._query_url = stack.query_url_output
         self._trigger_url = stack.trigger_url_output
@@ -56,16 +63,18 @@ class PipelineStack(Stack):
             ),
         )
 
-        stage = HiscoresTrackerStage(self, "Deploy")
+        # Beta: event trigger disabled so it never polls the HiScores API on schedule.
+        # Integration tests run here; passing them promotes to Prod.
+        beta = HiscoresTrackerStage(self, "Beta", enabled=False)
         pipeline.add_stage(
-            stage,
+            beta,
             post=[
                 pipelines.ShellStep(
                     "IntegrationTest",
                     input=source,
                     env_from_cfn_outputs={
-                        "TRIGGER_URL": stage.trigger_url,
-                        "QUERY_URL": stage.query_url,
+                        "TRIGGER_URL": beta.trigger_url,
+                        "QUERY_URL": beta.query_url,
                     },
                     commands=[
                         "pip install requests",
@@ -74,3 +83,9 @@ class PipelineStack(Stack):
                 )
             ],
         )
+
+        # Prod: stack_name preserves the existing CloudFormation stack in-place.
+        prod = HiscoresTrackerStage(
+            self, "Prod", stack_name="HiscoresTrackerStack"
+        )
+        pipeline.add_stage(prod)
