@@ -15,6 +15,7 @@
     ]
   },
   "context": {
+    "github_connection_arn": "arn:aws:codestar-connections:us-east-1:212039253172:connection/72414c8f-a6e4-427c-a701-a38759440114",
     "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
     "@aws-cdk/core:stackRelativeExports": true,
     "@aws-cdk/aws-rds:lowercaseDbIdentifier": true,
