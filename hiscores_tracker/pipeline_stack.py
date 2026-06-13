@@ -1,6 +1,7 @@
 import aws_cdk as cdk
 from aws_cdk import Stack
 from aws_cdk import aws_codebuild as codebuild
+from aws_cdk import aws_iam as iam
 from aws_cdk import aws_ssm as ssm
 from aws_cdk import pipelines
 from constructs import Construct
@@ -54,7 +55,15 @@ class PipelineStack(Stack):
             code_build_defaults=pipelines.CodeBuildOptions(
                 partial_build_spec=codebuild.BuildSpec.from_object({
                     "phases": {"install": {"commands": ["n 18"]}}
-                })
+                }),
+                role_policy=[
+                    iam.PolicyStatement(
+                        actions=["ssm:GetParameter", "ssm:GetParameters"],
+                        resources=[
+                            f"arn:aws:ssm:{self.region}:{self.account}:parameter/hiscores-tracker/github-connection-arn"
+                        ],
+                    )
+                ],
             ),
             synth=pipelines.ShellStep(
                 "Synth",
