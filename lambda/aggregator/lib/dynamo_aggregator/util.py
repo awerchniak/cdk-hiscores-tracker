@@ -1,4 +1,5 @@
 """Utility functions for aggregator lambda."""
+
 from decimal import Decimal
 
 

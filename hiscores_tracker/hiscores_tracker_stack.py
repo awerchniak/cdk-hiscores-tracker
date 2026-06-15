@@ -25,7 +25,9 @@ class HiscoresTrackerStack(Stack):
     def trigger_url_output(self):
         return self._trigger_url_output
 
-    def __init__(self, scope: Construct, construct_id: str, enabled: bool = True, **kwargs) -> None:
+    def __init__(
+        self, scope: Construct, construct_id: str, enabled: bool = True, **kwargs
+    ) -> None:
 
         super().__init__(scope, construct_id, **kwargs)
 
@@ -34,7 +36,9 @@ class HiscoresTrackerStack(Stack):
         self._query_url = atst.query_api.url
 
         # Provision HiScores API Logger
-        hiscores_logger = HiScoresLogger(self, "OSRSHiScoresLogger", table=atst.table, enabled=enabled)
+        hiscores_logger = HiScoresLogger(
+            self, "OSRSHiScoresLogger", table=atst.table, enabled=enabled
+        )
 
         # Expose Rest API to trigger orchestrator
         trigger_api = apigw.LambdaRestApi(
@@ -46,4 +50,6 @@ class HiscoresTrackerStack(Stack):
         self._trigger_url = trigger_api.url
 
         self._query_url_output = CfnOutput(self, "QueryUrl", value=self._query_url)
-        self._trigger_url_output = CfnOutput(self, "TriggerUrl", value=self._trigger_url)
+        self._trigger_url_output = CfnOutput(
+            self, "TriggerUrl", value=self._trigger_url
+        )

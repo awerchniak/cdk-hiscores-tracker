@@ -1,4 +1,5 @@
 """Useful OSRS Metrics Constants."""
+
 # Map JSON API skill names to legacy DB format
 LEGACY_SKILL_MAP = {
     "Runecraft": "Runecrafting",

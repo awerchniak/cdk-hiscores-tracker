@@ -1,4 +1,5 @@
 """Module for interacting with OSRS APIs."""
+
 import json
 import logging
 import re
@@ -124,11 +125,11 @@ def process_hiscores_response(response: requests.models.Response) -> dict:
 
         processed_payload["activities"] = dict()
         for activity in payload["activities"]:
-            processed_payload["activities"][
-                _safe_activity_name(activity["name"])
-            ] = dict(
-                rnk=activity["rank"],
-                kc=activity["score"],
+            processed_payload["activities"][_safe_activity_name(activity["name"])] = (
+                dict(
+                    rnk=activity["rank"],
+                    kc=activity["score"],
+                )
             )
     except (AttributeError, KeyError, TypeError):
         raise HiscoresDownError(
