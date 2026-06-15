@@ -4,7 +4,7 @@ import argparse
 import logging
 import requests
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 
 TIMESTAMP_FMT = "%Y-%m-%d %H:%M:%S"
 DATE_FMT = "%Y-%m-%d"
@@ -20,14 +20,14 @@ def main(args):
     logger.setLevel(logging.DEBUG)
 
     logger.info("Triggering save event...")
-    before = datetime.utcnow()
+    before = datetime.now(UTC)
     trigger_response = requests.post(args.log_api)
     players = trigger_response.json()
     logger.info(f"Triggered save for players {players}")
 
     logger.info("Sleeping 20 seconds...")
     time.sleep(20.0)
-    after = datetime.utcnow()
+    after = datetime.now(UTC)
 
     for player in players:
         start_time = datetime.strftime(before, TIMESTAMP_FMT)

@@ -32,7 +32,7 @@ def package_lambda(
             scope,
             function_name,
             description=description,
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_13,
             code=_lambda.Code.from_asset(code_dir),
             handler=f"{handler_name}.handler.handler",
             environment=environment,

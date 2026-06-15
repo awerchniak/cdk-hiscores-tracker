@@ -53,14 +53,15 @@ class PipelineStack(Stack):
             self,
             "Pipeline",
             code_build_defaults=pipelines.CodeBuildOptions(
-                partial_build_spec=codebuild.BuildSpec.from_object({
-                    "phases": {"install": {"commands": ["n 18"]}}
-                }),
+                partial_build_spec=codebuild.BuildSpec.from_object(
+                    {"phases": {"install": {"commands": ["n 22"]}}}
+                ),
                 role_policy=[
                     iam.PolicyStatement(
                         actions=["ssm:GetParameter", "ssm:GetParameters"],
                         resources=[
-                            f"arn:aws:ssm:{self.region}:{self.account}:parameter/hiscores-tracker/github-connection-arn"
+                            f"arn:aws:ssm:{self.region}:{self.account}"
+                            ":parameter/hiscores-tracker/github-connection-arn"
                         ],
                     )
                 ],
@@ -69,7 +70,7 @@ class PipelineStack(Stack):
                 "Synth",
                 input=source,
                 commands=[
-                    "npm install -g aws-cdk@2.0.0",
+                    "npm install -g aws-cdk",
                     "pip install -r requirements.txt",
                     "cdk synth",
                 ],
@@ -98,7 +99,5 @@ class PipelineStack(Stack):
         )
 
         # Prod: stack_name preserves the existing CloudFormation stack in-place.
-        prod = HiscoresTrackerStage(
-            self, "Prod", stack_name="HiscoresTrackerStack"
-        )
+        prod = HiscoresTrackerStage(self, "Prod", stack_name="HiscoresTrackerStack")
         pipeline.add_stage(prod)

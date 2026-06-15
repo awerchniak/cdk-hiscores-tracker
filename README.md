@@ -35,8 +35,19 @@ You can create an instance of this service for yourself using AWS CDK. The initi
 
 ## Prerequisites
 
-### 1. Install Python
-You can find the latest release at https://www.python.org/downloads/. Python 3.9 or later is required.
+### 1. Install mise and project runtimes
+
+This project uses [mise](https://mise.jdx.dev) to pin Python and Node to the same versions used by the CI/CD pipeline (Python 3.13.14, Node 22.22.3).
+
+```bash
+curl https://mise.run | sh
+echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
+source ~/.bashrc
+mise trust
+mise install
+```
+
+`mise install` reads `.mise.toml` at the repo root and installs the correct versions automatically.
 
 ### 2. Create a free-tier AWS account
 If you don't already have one, go to https://aws.amazon.com/free and sign up.
@@ -59,8 +70,10 @@ With the IAM user you created above, follow [these instructions](https://docs.aw
 ### 6. Install the CDK CLI
 
 ```bash
-npm install -g aws-cdk@2.0.0
+npm install -g aws-cdk
 ```
+
+This must be run after `mise install` so the CDK CLI is installed under the pinned Node version.
 
 ### 7. Create a GitHub CodeStar connection
 
@@ -103,6 +116,8 @@ pip install -r requirements.txt
 cdk bootstrap aws://ACCOUNT-NUMBER/REGION
 cdk deploy HiscoresPipelineStack
 ```
+
+> Make sure `mise install` and `npm install -g aws-cdk` have been run first so the venv and CDK CLI use the correct runtimes.
 
 This creates the CodePipeline. The pipeline immediately runs its first execution, deploying Beta and then Prod automatically. You can monitor progress in the AWS CodePipeline console.
 
