@@ -12,9 +12,13 @@ __pycache__
 cdk.out
 cdk.context.json
 
-# npm
-package.json
-package-lock.json
+# npm (root-level only; frontend/package.json is tracked)
+/package.json
+/package-lock.json
+frontend/node_modules/
+
+# local env files
+.env.local
 
 # local tokens/secrets
 .tok
