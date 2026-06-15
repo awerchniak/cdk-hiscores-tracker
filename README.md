@@ -18,6 +18,35 @@ The first uses a CloudWatch EventBridge to trigger an Orchestrator Lambda, which
 
 The second is a DynamoDB Table with a Lambda Function subscribed to write events. When the table is written to, the Lambda aggregates the new record into a daily sum row. The table also comes with a query Lambda Function and API Gateway Endpoint for easy reading with configurable daily aggregation.
 
+## Frontend
+
+A React + Vite web app (`frontend/`) is included for querying and visualizing the stored data. It is hosted on a private S3 bucket behind a CloudFront distribution, deployed as part of the CDK stack via the `FrontendHosting` construct.
+
+Features:
+- Player selector with autocomplete, date range picker, and granularity control (Auto / Monthly / Daily / Raw)
+- Skills and Activities tabs with multi-select and per-metric charting (XP, Level, Rank, Kill Count)
+- Line chart powered by Recharts with an OSRS-themed dark UI
+
+The app discovers the query API URL at runtime by fetching `/config.json`, which CDK writes to the S3 bucket at deploy time. This means no API URL needs to be baked into the build.
+
+After deployment the frontend URL is available as a CloudFormation output:
+
+```
+HiscoresTrackerStack.FrontendUrl = https://<id>.cloudfront.net
+```
+
+### Local development
+
+```bash
+cd frontend
+cp .env.local.example .env.local
+# Edit .env.local and set VITE_API_URL to your query API Gateway URL
+npm install
+npm run dev
+```
+
+Then open `http://localhost:5173` in your browser.
+
 # CI/CD Architecture
 
 Deployments are managed by a self-mutating AWS CodePipeline. Every push to `mainline` triggers a full pipeline run:

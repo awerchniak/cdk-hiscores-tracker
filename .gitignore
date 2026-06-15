@@ -1,5 +1,5 @@
 *.swp
-package-lock.json
+/package-lock.json
 __pycache__
 .pytest_cache
 .venv
@@ -16,6 +16,7 @@ cdk.context.json
 /package.json
 /package-lock.json
 frontend/node_modules/
+frontend/dist/
 
 # local env files
 .env.local

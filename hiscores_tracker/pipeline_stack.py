@@ -18,6 +18,10 @@ class HiscoresTrackerStage(cdk.Stage):
     def trigger_url(self):
         return self._trigger_url
 
+    @property
+    def frontend_url(self):
+        return self._frontend_url
+
     def __init__(
         self,
         scope: Construct,
@@ -33,6 +37,7 @@ class HiscoresTrackerStage(cdk.Stage):
         )
         self._query_url = stack.query_url_output
         self._trigger_url = stack.trigger_url_output
+        self._frontend_url = stack.frontend_url_output
 
 
 class PipelineStack(Stack):

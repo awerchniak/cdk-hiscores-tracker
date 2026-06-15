@@ -12,11 +12,14 @@ def test_synthesize():
 
     assert stack.query_url is not None
     assert stack.trigger_url is not None
+    assert stack.frontend_url is not None
     assert stack.query_url_output is not None
     assert stack.trigger_url_output is not None
+    assert stack.frontend_url_output is not None
 
     # Assert no extraneous resources
-    template.resource_count_is("AWS::Lambda::Function", 4)
+    # 4 application Lambdas + 1 BucketDeployment handler + 1 auto-delete handler
+    template.resource_count_is("AWS::Lambda::Function", 6)
     template.resource_count_is("AWS::DynamoDB::Table", 1)
     template.resource_count_is("AWS::SQS::Queue", 1)
     template.resource_count_is("AWS::ApiGateway::RestApi", 2)
@@ -107,7 +110,9 @@ def test_hiscores_tracker_stage_properties():
     stage = HiscoresTrackerStage(app, "TestStage")
     assert stage.query_url is not None
     assert stage.trigger_url is not None
+    assert stage.frontend_url is not None
 
     stage_with_name = HiscoresTrackerStage(app, "TestStageNamed", stack_name="MyStack")
     assert stage_with_name.query_url is not None
     assert stage_with_name.trigger_url is not None
+    assert stage_with_name.frontend_url is not None

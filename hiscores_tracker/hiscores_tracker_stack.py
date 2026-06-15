@@ -3,6 +3,7 @@ from aws_cdk import aws_apigateway as apigw
 from constructs import Construct
 
 from .agg_time_series_table import AggregatingTimeSeriesTable
+from .frontend_hosting import FrontendHosting
 from .hiscores_logger import HiScoresLogger
 
 
@@ -18,12 +19,20 @@ class HiscoresTrackerStack(Stack):
         return self._trigger_url
 
     @property
+    def frontend_url(self):
+        return self._frontend_url
+
+    @property
     def query_url_output(self):
         return self._query_url_output
 
     @property
     def trigger_url_output(self):
         return self._trigger_url_output
+
+    @property
+    def frontend_url_output(self):
+        return self._frontend_url_output
 
     def __init__(
         self, scope: Construct, construct_id: str, enabled: bool = True, **kwargs
@@ -49,7 +58,16 @@ class HiscoresTrackerStack(Stack):
         trigger_api.root.add_method("POST")
         self._trigger_url = trigger_api.url
 
+        # Host the React frontend on S3 + CloudFront
+        frontend = FrontendHosting(
+            self, "Frontend", query_api_url=self._query_url
+        )
+        self._frontend_url = frontend.url
+
         self._query_url_output = CfnOutput(self, "QueryUrl", value=self._query_url)
         self._trigger_url_output = CfnOutput(
             self, "TriggerUrl", value=self._trigger_url
+        )
+        self._frontend_url_output = CfnOutput(
+            self, "FrontendUrl", value=self._frontend_url
         )

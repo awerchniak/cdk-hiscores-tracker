@@ -1,8 +1,9 @@
-const API_BASE = import.meta.env.VITE_API_URL
-
-if (!API_BASE) {
-  console.error('VITE_API_URL is not set. Create frontend/.env.local with your API Gateway URL.')
-}
+// In dev, VITE_API_URL is read from .env.local.
+// In production the build has no API URL baked in, so we fetch config.json
+// (written to the S3 bucket by CDK at deploy time) to discover it at runtime.
+const _basePromise = import.meta.env.VITE_API_URL
+  ? Promise.resolve(import.meta.env.VITE_API_URL)
+  : fetch('/config.json').then(r => r.json()).then(c => c.apiUrl)
 
 function formatTime(dateStr, granularity) {
   if (!dateStr) return dateStr
@@ -14,7 +15,7 @@ function formatTime(dateStr, granularity) {
 }
 
 export async function fetchHiScores(player, startDate, endDate, granularity) {
-  if (!API_BASE) throw new Error('API URL not configured. Set VITE_API_URL in frontend/.env.local')
+  const apiBase = await _basePromise
 
   const params = new URLSearchParams({
     player,
@@ -22,7 +23,7 @@ export async function fetchHiScores(player, startDate, endDate, granularity) {
     endTime:   formatTime(endDate,   granularity),
   })
 
-  const res = await fetch(`${API_BASE}/v0?${params}`)
+  const res = await fetch(`${apiBase}/v0?${params}`)
   const json = await res.json()
 
   if (!res.ok) {
