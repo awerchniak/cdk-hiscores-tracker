@@ -22,6 +22,12 @@ from read_hiscores_table.lib.aggregation_queryer.util import (
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+}
+
 ddb = boto3.resource("dynamodb")
 table = ddb.Table(os.environ["HISCORES_TABLE_NAME"])
 
@@ -80,6 +86,7 @@ def handle_v0(event, context):
     if not isinstance(params, dict):
         return {
             "statusCode": 400,
+            "headers": CORS_HEADERS,
             "body": json.dumps(
                 {
                     "status": 400,
@@ -91,7 +98,11 @@ def handle_v0(event, context):
         }
 
     if "player" not in params:
-        return {"statusCode": 400, "body": "API requires 'player' param."}
+        return {
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
+            "body": "API requires 'player' param.",
+        }
     player = params["player"]
 
     if "startTime" not in params or not any(
@@ -103,6 +114,7 @@ def handle_v0(event, context):
     ):
         return {
             "statusCode": 400,
+            "headers": CORS_HEADERS,
             "body": json.dumps(
                 {
                     "status": 400,
@@ -124,6 +136,7 @@ def handle_v0(event, context):
     ):
         return {
             "statusCode": 400,
+            "headers": CORS_HEADERS,
             "body": json.dumps(
                 {
                     "status": 400,
@@ -140,6 +153,7 @@ def handle_v0(event, context):
 
     return {
         "statusCode": 200,
+        "headers": CORS_HEADERS,
         "body": json.dumps(query_response, cls=CustomEncoder),
     }
 
@@ -200,9 +214,12 @@ def handler(event, context):
 
     """
     method = event["httpMethod"]
+    if method == "OPTIONS":
+        return {"statusCode": 200, "headers": CORS_HEADERS, "body": ""}
     if method != "GET":
         return {
             "statusCode": 501,
+            "headers": CORS_HEADERS,
             "body": json.dumps({"status": 501, "message": "We only accept GET /"}),
         }
 

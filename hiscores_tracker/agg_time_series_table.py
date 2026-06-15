@@ -86,5 +86,9 @@ class AggregatingTimeSeriesTable(Construct):
             "QueryHiScoresData",
             handler=queryer,
             parameters={"player": "str", "startTime": "str", "endTime": "str"},
+            default_cors_preflight_options=apigw.CorsOptions(
+                allow_origins=apigw.Cors.ALL_ORIGINS,
+                allow_methods=["GET", "OPTIONS"],
+            ),
         )
         self._query_api.root.add_method("GET")
