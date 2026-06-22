@@ -1,8 +1,5 @@
 from read_hiscores_table.lib.historical_corrections.corrector import (
-    _extract_timestamp,
-    _find_era,
-    apply_corrections,
-)
+    _extract_timestamp, _find_era, _normalize_timestamp, apply_corrections)
 
 
 def test_extract_timestamp_raw():
@@ -25,10 +22,27 @@ def test_extract_timestamp_missing():
     assert _extract_timestamp({}) == ""
 
 
+def test_normalize_timestamp_full():
+    assert _normalize_timestamp("2022-01-06 12:00:00") == "2022-01-06 12:00:00"
+
+
+def test_normalize_timestamp_date():
+    assert _normalize_timestamp("2022-01-06") == "2022-01-06 00:00:00"
+
+
+def test_normalize_timestamp_month():
+    assert _normalize_timestamp("2022-01") == "2022-01-01 00:00:00"
+
+
 def test_find_era_within():
     era = _find_era("2022-01-06 12:00:00")
     assert era is not None
     assert era.start == "2022-01-05 00:00:00"
+
+
+def test_find_era_date_only():
+    era = _find_era("2022-01-06")
+    assert era is not None
 
 
 def test_find_era_outside():

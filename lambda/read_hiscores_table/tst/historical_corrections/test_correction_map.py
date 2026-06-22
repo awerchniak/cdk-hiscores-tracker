@@ -1,10 +1,5 @@
 from read_hiscores_table.lib.historical_corrections.correction_map import (
-    CORRECTION_ERAS,
-    ERA_0,
-    ERA_1,
-    ERA_20,
-    CorrectionEra,
-)
+    CORRECTION_ERAS, ERA_0, ERA_1, ERA_20, CorrectionEra)
 
 
 def test_eras_have_valid_timestamps():

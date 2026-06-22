@@ -1675,23 +1675,24 @@ ERA_20 = (
 
 # --- Correction eras ---
 # deployed=constants the parser was using, correct=what API served.
-# Start timestamps are approximate — TODO: refine from data.
+# Dates marked "confirmed" were verified from production data via
+# find_correction_boundaries.py on ElderPlinius. Others are estimates.
 
 CORRECTION_ERAS: List[CorrectionEra] = [
     CorrectionEra(
-        start="2022-01-05 00:00:00",  # TODO: confirm from data
+        start="2022-01-05 00:00:00",  # estimated (Nex release)
         end="2022-01-08 20:14:04",
         deployed=ERA_0,
         correct=ERA_1,
     ),
     CorrectionEra(
-        start="2022-03-23 00:00:00",  # TODO: confirm from data
+        start="2022-04-13 00:00:00",  # confirmed
         end="2022-04-14 23:21:42",
         deployed=ERA_1,
         correct=ERA_2,
     ),
     CorrectionEra(
-        start="2022-05-25 00:00:00",  # TODO: confirm from data
+        start="2022-05-25 00:00:00",  # estimated
         end="2022-07-13 11:12:13",
         deployed=ERA_2,
         correct=ERA_3,
@@ -1703,98 +1704,98 @@ CORRECTION_ERAS: List[CorrectionEra] = [
         correct=ERA_4,
     ),
     CorrectionEra(
-        start="2022-08-24 00:00:00",  # TODO: confirm from data
+        start="2022-08-24 00:00:00",  # estimated (ToA release)
         end="2022-08-24 12:12:32",
         deployed=ERA_4,
         correct=ERA_5,
     ),
     CorrectionEra(
-        start="2023-01-04 00:00:00",  # TODO: confirm from data
+        start="2023-01-04 00:00:00",  # estimated
         end="2023-01-12 21:43:43",
         deployed=ERA_5,
         correct=ERA_6,
     ),
     CorrectionEra(
-        start="2023-03-29 00:00:00",  # TODO: confirm from data
+        start="2023-03-29 00:00:00",  # estimated
         end="2023-04-12 13:03:10",
         deployed=ERA_6,
         correct=ERA_7,
     ),
     CorrectionEra(
-        start="2023-05-24 00:00:00",  # TODO: confirm from data
+        start="2023-05-24 00:00:00",  # confirmed
         end="2023-05-24 19:27:20",
         deployed=ERA_7,
         correct=ERA_8,
     ),
     CorrectionEra(
-        start="2023-07-26 00:00:00",  # TODO: confirm from data
+        start="2023-07-26 00:00:00",  # confirmed
         end="2023-07-30 20:52:38",
         deployed=ERA_8,
         correct=ERA_9,
     ),
     CorrectionEra(
-        start="2023-08-24 00:00:00",  # TODO: confirm from data
+        start="2023-08-23 00:00:00",  # confirmed
         end="2023-08-24 18:29:49",
         deployed=ERA_9,
         correct=ERA_10,
     ),
     CorrectionEra(
-        start="2024-01-10 00:00:00",  # TODO: confirm from data
+        start="2024-01-10 00:00:00",  # estimated
         end="2024-01-24 11:18:09",
         deployed=ERA_10,
         correct=ERA_11,
     ),
     CorrectionEra(
-        start="2024-03-20 00:00:00",  # TODO: confirm from data
+        start="2024-03-20 00:00:00",  # confirmed
         end="2024-03-21 13:01:54",
         deployed=ERA_11,
         correct=ERA_12,
     ),
     CorrectionEra(
-        start="2024-07-24 00:00:00",  # TODO: confirm from data
+        start="2024-07-24 00:00:00",  # estimated
         end="2024-08-28 08:16:03",
         deployed=ERA_12,
         correct=ERA_13,
     ),
     CorrectionEra(
-        start="2024-09-25 00:00:00",  # TODO: confirm from data
+        start="2024-09-25 00:00:00",  # estimated
         end="2024-09-25 08:25:31",
         deployed=ERA_13,
         correct=ERA_14,
     ),
     CorrectionEra(
-        start="2025-01-29 00:00:00",  # TODO: confirm from data
+        start="2025-01-29 00:00:00",  # confirmed
         end="2025-02-06 17:31:03",
         deployed=ERA_14,
         correct=ERA_15,
     ),
     CorrectionEra(
-        start="2025-05-14 00:00:00",  # TODO: confirm from data
+        start="2025-05-14 00:00:00",  # estimated
         end="2025-05-20 08:57:28",
         deployed=ERA_15,
         correct=ERA_16,
     ),
     CorrectionEra(
-        start="2025-07-24 00:00:00",  # TODO: confirm from data
+        start="2025-07-23 00:00:00",  # confirmed
         end="2025-07-24 18:04:07",
         deployed=ERA_16,
         correct=ERA_17,
     ),
     CorrectionEra(
-        start="2025-10-15 00:00:00",  # TODO: confirm from data
+        start="2025-10-15 00:00:00",  # confirmed
         end="2025-10-15 18:24:17",
         deployed=ERA_17,
         correct=ERA_18,
     ),
     CorrectionEra(
-        start="2025-11-05 00:00:00",  # TODO: confirm from data
+        start="2025-11-05 00:00:00",  # confirmed
         end="2025-11-07 18:13:48",
         deployed=ERA_18,
         correct=ERA_19,
     ),
-    # Sailing (skill, 2025-11-19) caused parse failures — no data stored.
+    # Sailing (skill, 2025-11-19): parse failures, no data.
     CorrectionEra(
-        start="2026-02-25 00:00:00",  # TODO: confirm from data
+        start="2026-02-25 00:00:00",  # estimated
         end="2026-02-25 09:03:45",
         deployed=ERA_19,
         correct=ERA_20,

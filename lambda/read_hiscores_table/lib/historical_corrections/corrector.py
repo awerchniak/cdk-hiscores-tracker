@@ -10,9 +10,18 @@ def _extract_timestamp(item):
     return ts
 
 
+def _normalize_timestamp(ts):
+    if len(ts) == 7:
+        return ts + "-01 00:00:00"
+    if len(ts) == 10:
+        return ts + " 00:00:00"
+    return ts
+
+
 def _find_era(timestamp):
+    normalized = _normalize_timestamp(timestamp)
     for era in CORRECTION_ERAS:
-        if era.start <= timestamp <= era.end:
+        if era.start <= normalized <= era.end:
             return era
     return None
 
