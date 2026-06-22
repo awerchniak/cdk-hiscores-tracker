@@ -5,19 +5,11 @@ import os
 import boto3
 from boto3.dynamodb.conditions import Key
 from read_hiscores_table.lib.aggregation_queryer.legacy import (
-    format_legacy_response,
-    parse_query_str,
-)
+    format_legacy_response, parse_query_str)
 from read_hiscores_table.lib.aggregation_queryer.util import (
-    DATE_FMT,
-    MONTH_FMT,
-    TIMESTAMP_FMT,
-    CustomEncoder,
-    get_query_boundaries,
-    infer_aggregation_level,
-    lint_items,
-    valid_datetime,
-)
+    DATE_FMT, MONTH_FMT, TIMESTAMP_FMT, CustomEncoder, get_query_boundaries,
+    infer_aggregation_level, lint_items, valid_datetime)
+from read_hiscores_table.lib.historical_corrections import apply_corrections
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -76,7 +68,8 @@ def run_table_query(player, start_time, end_time, skills=None, category=None):
     linted_items = lint_items(items, aggregation_level)
     logger.info(f"Linted items: {linted_items}")
 
-    return linted_items
+    corrected_items = apply_corrections(linted_items)
+    return corrected_items
 
 
 def handle_v0(event, context):
