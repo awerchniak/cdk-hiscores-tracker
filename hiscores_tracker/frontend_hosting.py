@@ -7,7 +7,9 @@ from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_s3_deployment as s3deploy
 from constructs import Construct
 
-_FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
+_FRONTEND_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "frontend"
+)
 
 
 class FrontendHosting(Construct):
@@ -38,7 +40,9 @@ class FrontendHosting(Construct):
             "Distribution",
             default_behavior=cloudfront.BehaviorOptions(
                 origin=origins.S3BucketOrigin.with_origin_access_control(bucket),
-                viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                viewer_protocol_policy=(
+                    cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+                ),
             ),
             default_root_object="index.html",
             # Route unknown paths back to index.html for SPA client-side routing
