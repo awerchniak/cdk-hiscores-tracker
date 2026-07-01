@@ -2,6 +2,9 @@
 
 from .correction_map import CORRECTION_ERAS
 
+_DAILY_TS_LEN = len("YYYY-MM-DD")
+_MONTHLY_TS_LEN = len("YYYY-MM")
+
 
 def _extract_timestamp(item):
     ts = item.get("timestamp", "")
@@ -11,19 +14,43 @@ def _extract_timestamp(item):
 
 
 def _normalize_timestamp(ts):
-    if len(ts) == 7:
+    if len(ts) == _MONTHLY_TS_LEN:
         return ts + "-01 00:00:00"
-    if len(ts) == 10:
+    if len(ts) == _DAILY_TS_LEN:
         return ts + " 00:00:00"
     return ts
 
 
 def _find_era(timestamp):
+    if len(timestamp) == _MONTHLY_TS_LEN:
+        # Monthly aggregates span a full calendar month; match any era that
+        # overlaps the month, not just eras that contain the first of the month.
+        for era in CORRECTION_ERAS:
+            start_mo = era.start[:_MONTHLY_TS_LEN]
+            end_mo = era.end[:_MONTHLY_TS_LEN]
+            if start_mo <= timestamp <= end_mo:
+                return era
+        return None
     normalized = _normalize_timestamp(timestamp)
     for era in CORRECTION_ERAS:
         if era.start <= normalized <= era.end:
             return era
     return None
+
+
+def _is_boundary(ts, era):
+    """True for aggregated timestamps that straddle an era boundary.
+
+    Daily/monthly aggregates on the start or end day of an error era mix
+    correct and mislabeled raw data in unknown proportions, so they cannot
+    be reliably corrected and are omitted from the response instead.
+    Raw timestamps (point-in-time) are never considered boundary items.
+    """
+    if len(ts) == _DAILY_TS_LEN:
+        return ts == era.start[:_DAILY_TS_LEN] or ts == era.end[:_DAILY_TS_LEN]
+    if len(ts) == _MONTHLY_TS_LEN:
+        return ts == era.start[:_MONTHLY_TS_LEN] or ts == era.end[:_MONTHLY_TS_LEN]
+    return False
 
 
 def apply_corrections(items):
@@ -39,6 +66,9 @@ def apply_corrections(items):
         renames = era.renames
         if not renames:
             result.append(item)
+            continue
+
+        if _is_boundary(ts, era):
             continue
 
         old_activities = item["activities"]

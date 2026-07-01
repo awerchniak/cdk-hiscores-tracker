@@ -59,9 +59,7 @@ class HiscoresTrackerStack(Stack):
         self._trigger_url = trigger_api.url
 
         # Host the React frontend on S3 + CloudFront
-        frontend = FrontendHosting(
-            self, "Frontend", query_api_url=self._query_url
-        )
+        frontend = FrontendHosting(self, "Frontend", query_api_url=self._query_url)
         self._frontend_url = frontend.url
 
         self._query_url_output = CfnOutput(self, "QueryUrl", value=self._query_url)

@@ -5,10 +5,19 @@ import os
 import boto3
 from boto3.dynamodb.conditions import Key
 from read_hiscores_table.lib.aggregation_queryer.legacy import (
-    format_legacy_response, parse_query_str)
+    format_legacy_response,
+    parse_query_str,
+)
 from read_hiscores_table.lib.aggregation_queryer.util import (
-    DATE_FMT, MONTH_FMT, TIMESTAMP_FMT, CustomEncoder, get_query_boundaries,
-    infer_aggregation_level, lint_items, valid_datetime)
+    DATE_FMT,
+    MONTH_FMT,
+    TIMESTAMP_FMT,
+    CustomEncoder,
+    get_query_boundaries,
+    infer_aggregation_level,
+    lint_items,
+    valid_datetime,
+)
 from read_hiscores_table.lib.historical_corrections import apply_corrections
 
 logger = logging.getLogger()
