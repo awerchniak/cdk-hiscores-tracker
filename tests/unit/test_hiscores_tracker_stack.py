@@ -145,10 +145,29 @@ def test_try_get_ssm_parameter_returns_none_when_missing(mocker):
     assert _try_get_ssm_parameter("/some/param") is None
 
 
+def test_try_get_ssm_parameter_returns_none_when_access_denied(mocker):
+    # Self-mutating pipelines run Synth under the *current* CodeBuild role,
+    # which only gains permission to read a newly added parameter after a
+    # successful synth updates the pipeline itself. The first run after
+    # adding a new required permission sees AccessDenied rather than a clean
+    # "not found" -- this must be treated the same way so that run can still
+    # succeed and self-mutate.
+    mock_client = mocker.Mock()
+    mock_client.get_parameter.side_effect = botocore.exceptions.ClientError(
+        {"Error": {"Code": "AccessDeniedException", "Message": "not authorized"}},
+        "GetParameter",
+    )
+    mocker.patch(
+        "hiscores_tracker.pipeline_stack.boto3.client", return_value=mock_client
+    )
+
+    assert _try_get_ssm_parameter("/some/param") is None
+
+
 def test_try_get_ssm_parameter_reraises_other_errors(mocker):
     mock_client = mocker.Mock()
     mock_client.get_parameter.side_effect = botocore.exceptions.ClientError(
-        {"Error": {"Code": "AccessDeniedException", "Message": "nope"}},
+        {"Error": {"Code": "ThrottlingException", "Message": "nope"}},
         "GetParameter",
     )
     mocker.patch(
