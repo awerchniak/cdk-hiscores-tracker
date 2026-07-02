@@ -115,7 +115,12 @@ class FrontendHosting(Construct):
                 s3deploy.Source.asset(
                     _FRONTEND_DIR,
                     bundling=BundlingOptions(
-                        image=DockerImage.from_registry("node:22-alpine"),
+                        # ECR Public mirror, not Docker Hub directly -- avoids
+                        # Docker Hub's anonymous pull rate limit, which the
+                        # shared CodeBuild NAT IP hits under repeated builds.
+                        image=DockerImage.from_registry(
+                            "public.ecr.aws/docker/library/node:22-alpine"
+                        ),
                         command=[
                             "sh",
                             "-c",
