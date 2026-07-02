@@ -12,18 +12,28 @@ from .hiscores_tracker_stack import HiscoresTrackerStack
 
 _FRONTEND_DOMAIN_NAME_PARAM = "/hiscores-tracker/frontend-domain-name"
 
+# ParameterNotFound: the deployer hasn't opted in to the feature.
+# AccessDeniedException: the self-mutating pipeline's Synth step runs under
+# its *current* CodeBuild role, which only gains permission to read a newly
+# added parameter after a successful synth updates the pipeline itself (via
+# the UpdatePipeline stage). So the first run after adding a new required
+# permission sees AccessDenied rather than a clean "not found" -- treat it
+# the same way so that run can still succeed and self-mutate; the parameter
+# is then readable on the next run.
+_MISSING_PARAM_ERROR_CODES = {"ParameterNotFound", "AccessDeniedException"}
+
 
 def _try_get_ssm_parameter(name: str) -> str:
-    """Resolve an SSM parameter at synth time, or None if it doesn't exist.
+    """Resolve an SSM parameter at synth time, or None if it isn't available.
 
-    Unlike ssm.StringParameter.value_from_lookup, this never fails synth for
-    deployers who haven't set the parameter -- used for opt-in features that
-    must stay off by default.
+    Unlike ssm.StringParameter.value_from_lookup, this never fails synth when
+    the parameter isn't readable -- used for opt-in features that must stay
+    off by default.
     """
     try:
         return boto3.client("ssm").get_parameter(Name=name)["Parameter"]["Value"]
     except botocore.exceptions.ClientError as e:
-        if e.response["Error"]["Code"] == "ParameterNotFound":
+        if e.response["Error"]["Code"] in _MISSING_PARAM_ERROR_CODES:
             return None
         raise
 
