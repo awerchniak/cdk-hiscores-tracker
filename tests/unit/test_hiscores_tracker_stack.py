@@ -1,8 +1,14 @@
 import aws_cdk as core
 import aws_cdk.assertions as assertions
+import botocore.exceptions
+import pytest
 
 from hiscores_tracker.hiscores_tracker_stack import HiscoresTrackerStack
-from hiscores_tracker.pipeline_stack import HiscoresTrackerStage, PipelineStack
+from hiscores_tracker.pipeline_stack import (
+    HiscoresTrackerStage,
+    PipelineStack,
+    _try_get_ssm_parameter,
+)
 
 
 def test_synthesize():
@@ -80,7 +86,83 @@ def test_synthesize():
     )
 
 
-def test_synthesize_pipeline_stack():
+def test_synthesize_with_custom_domain():
+    app = core.App()
+    stack = HiscoresTrackerStack(
+        app,
+        "hiscores-logger-custom-domain",
+        domain_name="example.com",
+        env=core.Environment(account="123456789012", region="us-east-1"),
+    )
+    template = assertions.Template.from_stack(stack)
+
+    assert stack.frontend_url == "https://example.com"
+
+    template.resource_count_is("AWS::CertificateManager::Certificate", 1)
+    template.has_resource_properties(
+        "AWS::CertificateManager::Certificate",
+        {"DomainName": "example.com", "ValidationMethod": "DNS"},
+    )
+    template.has_resource_properties(
+        "AWS::CloudFront::Distribution",
+        {
+            "DistributionConfig": assertions.Match.object_like(
+                {
+                    "Aliases": ["example.com"],
+                    "ViewerCertificate": assertions.Match.object_like(
+                        {"SslSupportMethod": "sni-only"}
+                    ),
+                }
+            )
+        },
+    )
+    # Alias A + AAAA records; no separate record for cert validation since
+    # AWS::CertificateManager::Certificate handles that natively when given
+    # a HostedZoneId.
+    template.resource_count_is("AWS::Route53::RecordSet", 2)
+
+
+def test_try_get_ssm_parameter_returns_value(mocker):
+    mock_client = mocker.Mock()
+    mock_client.get_parameter.return_value = {"Parameter": {"Value": "example.com"}}
+    mocker.patch(
+        "hiscores_tracker.pipeline_stack.boto3.client", return_value=mock_client
+    )
+
+    assert _try_get_ssm_parameter("/some/param") == "example.com"
+
+
+def test_try_get_ssm_parameter_returns_none_when_missing(mocker):
+    mock_client = mocker.Mock()
+    mock_client.get_parameter.side_effect = botocore.exceptions.ClientError(
+        {"Error": {"Code": "ParameterNotFound", "Message": "not found"}},
+        "GetParameter",
+    )
+    mocker.patch(
+        "hiscores_tracker.pipeline_stack.boto3.client", return_value=mock_client
+    )
+
+    assert _try_get_ssm_parameter("/some/param") is None
+
+
+def test_try_get_ssm_parameter_reraises_other_errors(mocker):
+    mock_client = mocker.Mock()
+    mock_client.get_parameter.side_effect = botocore.exceptions.ClientError(
+        {"Error": {"Code": "AccessDeniedException", "Message": "nope"}},
+        "GetParameter",
+    )
+    mocker.patch(
+        "hiscores_tracker.pipeline_stack.boto3.client", return_value=mock_client
+    )
+
+    with pytest.raises(botocore.exceptions.ClientError):
+        _try_get_ssm_parameter("/some/param")
+
+
+def test_synthesize_pipeline_stack(mocker):
+    mocker.patch(
+        "hiscores_tracker.pipeline_stack._try_get_ssm_parameter", return_value=None
+    )
     app = core.App()
     stack = PipelineStack(
         app,
