@@ -35,7 +35,12 @@ class HiscoresTrackerStack(Stack):
         return self._frontend_url_output
 
     def __init__(
-        self, scope: Construct, construct_id: str, enabled: bool = True, **kwargs
+        self,
+        scope: Construct,
+        construct_id: str,
+        enabled: bool = True,
+        domain_name: str = None,
+        **kwargs,
     ) -> None:
 
         super().__init__(scope, construct_id, **kwargs)
@@ -59,7 +64,12 @@ class HiscoresTrackerStack(Stack):
         self._trigger_url = trigger_api.url
 
         # Host the React frontend on S3 + CloudFront
-        frontend = FrontendHosting(self, "Frontend", query_api_url=self._query_url)
+        frontend = FrontendHosting(
+            self,
+            "Frontend",
+            query_api_url=self._query_url,
+            domain_name=domain_name,
+        )
         self._frontend_url = frontend.url
 
         self._query_url_output = CfnOutput(self, "QueryUrl", value=self._query_url)

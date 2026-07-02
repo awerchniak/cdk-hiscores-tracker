@@ -3,6 +3,8 @@ OSRS HiScores Tracking with AWS CDK
 ====================================
 <img src="./assetts/Old_School_RuneScape_logo.png" width=500 />
 
+**Live demo:** [osrs-stats-visualizer.net](https://osrs-stats-visualizer.net)
+
 # Background
 
 This project helps OSRS players to track and visualize their in-game progress using the HiScores API. It is built on Amazon Web Services and is easily bootstrapped using AWS CDK. As such, having an AWS account and the AWS CLI installed is a prerequisite.
@@ -126,6 +128,19 @@ aws ssm put-parameter \
 ```
 
 The pipeline reads this value at synth time so the ARN is never committed to source.
+
+### 9. (Optional) Point a custom domain at the frontend
+
+If you own a public Route 53 hosted zone in this account and want the frontend served at your own domain instead of the default `*.cloudfront.net` URL, store the domain name in SSM:
+
+```bash
+aws ssm put-parameter \
+    --name /hiscores-tracker/frontend-domain-name \
+    --value "your-domain.com" \
+    --type String
+```
+
+If this parameter is absent, the frontend is served at the default CloudFront domain and nothing else changes — this step is entirely optional. If it's present, the next pipeline run (or `cdk deploy`) automatically requests and validates an ACM certificate, attaches it and the domain as a CloudFront alias, and creates the Route 53 records pointing the domain at the distribution.
 
 ## Clone and configure the repo
 
