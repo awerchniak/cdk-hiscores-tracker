@@ -19,6 +19,10 @@ from read_hiscores_table.lib.aggregation_queryer.util import (
     valid_datetime,
 )
 from read_hiscores_table.lib.historical_corrections import apply_corrections
+from read_hiscores_table.lib.name_corrections import (
+    merge_period_collisions,
+    resolve_aliases,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -50,28 +54,47 @@ def run_table_query(player, start_time, end_time, skills=None, category=None):
             ),
         }
 
+    canonical_player, aliases = resolve_aliases(player)
     logger.info(
-        f"Retrieving HiScores data for player '{player}' between "
+        f"Resolved '{player}' to canonical '{canonical_player}', aliases={aliases}"
+    )
+    logger.info(
+        f"Retrieving HiScores data for player '{canonical_player}' between "
         f"{query_boundaries[0]} and {query_boundaries[1]}"
     )
-    if skills and category:
-        logger.info(f"Limiting query to category '{category}' and skills {skills}")
-        response = table.query(
-            KeyConditionExpression=Key("player").eq(player)
-            & Key("timestamp").between(*query_boundaries),
-            ProjectionExpression=",".join(
-                ["player", "#t", "divisor"]
-                + [f"skills.{skill}.{category}" for skill in skills]
-            ),
-            ExpressionAttributeNames={"#t": "timestamp"},
-        )
-    else:
-        response = table.query(
-            KeyConditionExpression=Key("player").eq(player)
-            & Key("timestamp").between(*query_boundaries),
-        )
 
-    items = response["Items"]
+    items = []
+    for alias in sorted(aliases):
+        if skills and category:
+            logger.info(f"Limiting query to category '{category}' and skills {skills}")
+            response = table.query(
+                KeyConditionExpression=Key("player").eq(alias)
+                & Key("timestamp").between(*query_boundaries),
+                ProjectionExpression=",".join(
+                    ["player", "#t", "divisor"]
+                    + [f"skills.{skill}.{category}" for skill in skills]
+                ),
+                ExpressionAttributeNames={"#t": "timestamp"},
+            )
+        else:
+            response = table.query(
+                KeyConditionExpression=Key("player").eq(alias)
+                & Key("timestamp").between(*query_boundaries),
+            )
+        for item in response["Items"]:
+            item["player"] = canonical_player
+            items.append(item)
+
+    # All items in one request share the same aggregation_level (and therefore
+    # the same timestamp string format), since aggregation_level is derived once
+    # above from start_time/end_time -- a plain lexicographic sort is safe here.
+    #
+    # A rename that happens mid-day/mid-month can surface two Daily#/Monthly#
+    # rows with the identical timestamp (one per alias, each a partial-period
+    # aggregate); merge_period_collisions combines them (sum skills/activities/
+    # divisor) before lint_items divides, producing one correctly-weighted row.
+    items = merge_period_collisions(items)
+    items.sort(key=lambda item: item["timestamp"])
     logger.info(f"Received items: {items}")
 
     linted_items = lint_items(items, aggregation_level)
