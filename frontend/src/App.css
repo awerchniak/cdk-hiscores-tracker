@@ -95,6 +95,32 @@ input[type="date"]:focus {
   white-space: nowrap;
 }
 
+.radio-label.disabled {
+  position: relative;
+  color: #6b6b6b;
+  cursor: not-allowed;
+}
+
+.granularity-hint {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  white-space: normal;
+  width: 180px;
+  color: #e8b923;
+  background: #1a1a1a;
+  border: 1px solid #5c4b1e;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  z-index: 1;
+}
+
+.radio-label.disabled:hover .granularity-hint {
+  display: block;
+}
+
 /* ── Query button ────────────────────────────────────────────── */
 .query-btn {
   background: #5c4b1e;

@@ -1,11 +1,20 @@
+import { useEffect } from 'react'
 import { PLAYERS } from '../constants'
+
+const RAW_MAX_DAYS = 7
 
 const GRANULARITIES = [
   { value: 'auto',    label: 'Auto',    title: 'Let the backend infer from date range (default: daily)' },
   { value: 'monthly', label: 'Monthly', title: 'Force monthly aggregation (YYYY-MM)' },
   { value: 'daily',   label: 'Daily',   title: 'Force daily aggregation (YYYY-MM-DD)' },
-  { value: 'raw',     label: 'Raw',     title: 'No aggregation — best for ranges under 7 days' },
+  { value: 'raw',     label: 'Raw',     title: `No aggregation — only available for ranges under ${RAW_MAX_DAYS} days` },
 ]
+
+function daysBetween(startDate, endDate) {
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  return (end - start) / (1000 * 60 * 60 * 24)
+}
 
 export default function Controls({
   player, onPlayerChange,
@@ -14,6 +23,14 @@ export default function Controls({
   granularity, onGranularityChange,
   onQuery, loading,
 }) {
+  const rawDisabled = !!startDate && !!endDate && daysBetween(startDate, endDate) >= RAW_MAX_DAYS
+
+  useEffect(() => {
+    if (rawDisabled && granularity === 'raw') {
+      onGranularityChange('auto')
+    }
+  }, [rawDisabled, granularity, onGranularityChange])
+
   return (
     <div className="controls">
       <div className="control-group">
@@ -54,18 +71,31 @@ export default function Controls({
       <div className="control-group">
         <label>Granularity</label>
         <div className="radio-group">
-          {GRANULARITIES.map(g => (
-            <label key={g.value} className="radio-label" title={g.title}>
-              <input
-                type="radio"
-                name="granularity"
-                value={g.value}
-                checked={granularity === g.value}
-                onChange={() => onGranularityChange(g.value)}
-              />
-              {g.label}
-            </label>
-          ))}
+          {GRANULARITIES.map(g => {
+            const disabled = g.value === 'raw' && rawDisabled
+            return (
+              <label
+                key={g.value}
+                className={`radio-label${disabled ? ' disabled' : ''}`}
+                title={disabled ? `Raw is only available for ranges under ${RAW_MAX_DAYS} days` : g.title}
+              >
+                <input
+                  type="radio"
+                  name="granularity"
+                  value={g.value}
+                  checked={granularity === g.value}
+                  disabled={disabled}
+                  onChange={() => onGranularityChange(g.value)}
+                />
+                {g.label}
+                {disabled && (
+                  <span className="granularity-hint">
+                    Raw disabled — select a range under {RAW_MAX_DAYS} days to use it.
+                  </span>
+                )}
+              </label>
+            )
+          })}
         </div>
       </div>
 
