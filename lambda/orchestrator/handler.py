@@ -1,8 +1,16 @@
+from __future__ import annotations
+
 import json
 import logging
 import os
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 import boto3
+
+if TYPE_CHECKING:
+    from aws_lambda_typing.context import Context
+    from aws_lambda_typing.responses import APIGatewayProxyResponseV1
 
 sqs = boto3.client("sqs")
 
@@ -10,7 +18,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def handler(event, context):
+def handler(event: Mapping[str, object], context: Context) -> APIGatewayProxyResponseV1:
     with open("orchestrator/players.txt") as players_file:
         player_list = [
             line.strip().replace(" ", "-") for line in players_file.readlines()

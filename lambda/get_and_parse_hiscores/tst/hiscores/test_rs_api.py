@@ -1,22 +1,28 @@
 import datetime
 import json
+from collections.abc import Mapping
+from typing import TypedDict
 from unittest import mock
+from unittest.mock import MagicMock
 
 import get_and_parse_hiscores.lib.hiscores.rs_api as rs_api
 import pytest
 import requests
+from get_and_parse_hiscores.lib.hiscores.rs_api import ActivityStats, SkillStats
 
 
 class MockRequestsGet(object):
     """Mock for `requests` module."""
 
-    def __init__(self, text, status_code, elapsed, reason):
+    def __init__(self, text: str, status_code: int, elapsed: float, reason: str):
         self._text = text
         self._status_code = status_code
         self._elapsed = datetime.timedelta(seconds=elapsed)
         self._reason = reason
 
-    def __call__(self, api, params, *args, **kwargs):
+    def __call__(
+        self, api: str, params: Mapping[str, str], *args: object, **kwargs: object
+    ) -> requests.Response:
         response = requests.Response()
         response._content = self._text.encode("utf-8")
         response.status_code = self._status_code
@@ -24,13 +30,13 @@ class MockRequestsGet(object):
         response.reason = self._reason
         response.encoding = "utf-8"
         response.headers["Content-Type"] = "application/json"
-        response.request = requests.Request()
+        response.request = requests.PreparedRequest()
         response.request.url = api + "?player=" + params["player"]
 
         return response
 
 
-def successful_response_text(player_name):
+def successful_response_text(player_name: str) -> str:
     return json.dumps(
         {
             "name": player_name,
@@ -312,11 +318,17 @@ def successful_response_text(player_name):
 
 
 @pytest.fixture
-def player_name():
+def player_name() -> str:
     return "PlayerName"
 
 
-def successful_parsed_response(player_name):
+class _ExpectedPayload(TypedDict):
+    player: str
+    skills: dict[str, SkillStats]
+    activities: dict[str, ActivityStats]
+
+
+def successful_parsed_response(player_name: str) -> _ExpectedPayload:
     return {
         "activities": {
             "AbyssalSire": {"kc": -1, "rnk": -1},
@@ -448,7 +460,7 @@ def successful_parsed_response(player_name):
     ],
 )
 @mock.patch(f"{rs_api.__name__}.requests.get")
-def test_get_parse_hiscores_valid(mock_get, player, api):
+def test_get_parse_hiscores_valid(mock_get: MagicMock, player: str, api: str) -> None:
     mock_get.side_effect = MockRequestsGet(
         text=successful_response_text(player),
         status_code=200,
@@ -459,7 +471,7 @@ def test_get_parse_hiscores_valid(mock_get, player, api):
     response = rs_api.request_hiscores(player)
     mock_get.assert_called_once_with(api, params=dict(player=player), timeout=mock.ANY)
 
-    payload = rs_api.process_hiscores_response(response)
+    payload = dict(rs_api.process_hiscores_response(response))
     timestamp = payload.pop("timestamp")
     assert payload == successful_parsed_response(player_name=player)
     assert timestamp is not None
@@ -469,7 +481,7 @@ def test_get_parse_hiscores_valid(mock_get, player, api):
     f"{rs_api.__name__}.requests.get",
     side_effect=requests.exceptions.ReadTimeout,
 )
-def test_request_hiscores_read_timeout(mock_get, player_name):
+def test_request_hiscores_read_timeout(mock_get: MagicMock, player_name: str) -> None:
     with pytest.raises(rs_api.HiscoresDownError):
         rs_api.request_hiscores(player_name)
     mock_get.assert_called_once()
@@ -484,7 +496,7 @@ def test_request_hiscores_read_timeout(mock_get, player_name):
         reason="Internal Server Error",
     ),
 )
-def test_request_hiscores_down(mock_get, player_name):
+def test_request_hiscores_down(mock_get: MagicMock, player_name: str) -> None:
     with pytest.raises(rs_api.HiscoresDownError):
         rs_api.request_hiscores(player_name)
     mock_get.assert_called_once()
@@ -499,14 +511,16 @@ def test_request_hiscores_down(mock_get, player_name):
         reason="Resource not found",
     ),
 )
-def test_request_hiscores_error(mock_get, player_name):
+def test_request_hiscores_error(mock_get: MagicMock, player_name: str) -> None:
     with pytest.raises(ValueError):
         rs_api.request_hiscores(player_name)
     mock_get.assert_called_once()
 
 
 @mock.patch(f"{rs_api.__name__}.requests.get")
-def test_process_hiscores_response_invalid_json(mock_get, player_name):
+def test_process_hiscores_response_invalid_json(
+    mock_get: MagicMock, player_name: str
+) -> None:
     invalid_text = "The Highscores are currently undergoing maintenance."
     mock_get.side_effect = MockRequestsGet(
         text=invalid_text,
@@ -525,7 +539,9 @@ def test_process_hiscores_response_invalid_json(mock_get, player_name):
 
 
 @mock.patch(f"{rs_api.__name__}.requests.get")
-def test_process_hiscores_response_empty_json(mock_get, player_name):
+def test_process_hiscores_response_empty_json(
+    mock_get: MagicMock, player_name: str
+) -> None:
     unexpected_text = "{}"
     mock_get.side_effect = MockRequestsGet(
         text=unexpected_text,  # valid json but not what we expect

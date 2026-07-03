@@ -3,9 +3,9 @@
 from .name_map import NAME_CHANGES
 
 
-def _canonical(name, name_map):
+def _canonical(name: str, name_map: dict[str, str]) -> str:
     """Follow the rename chain forward to the final (canonical) name."""
-    seen = set()
+    seen: set[str] = set()
     while name in name_map:
         if name in seen:
             raise ValueError(f"Cycle detected in name map starting at '{name}'")
@@ -14,7 +14,9 @@ def _canonical(name, name_map):
     return name
 
 
-def resolve_aliases(player, name_map=NAME_CHANGES):
+def resolve_aliases(
+    player: str, name_map: dict[str, str] = NAME_CHANGES
+) -> tuple[str, set[str]]:
     """Resolve `player` to its canonical name and the set of all known aliases.
 
     Handles rename chains in either direction: querying any name in a chain

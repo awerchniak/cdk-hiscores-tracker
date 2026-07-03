@@ -18,13 +18,17 @@ class HiScoresLogger(Construct):
     """Automatically log OldSchoolRuneScape HiScores metrics to Dynamo table."""
 
     @property
-    def orchestrator(self):
+    def orchestrator(self) -> _lambda.Function:
         return self._orchestrator
 
     def __init__(
-        self, scope: Construct, id: str, table: ddb.ITable, enabled=True, **kwargs
-    ):
-        super().__init__(scope, id, **kwargs)
+        self,
+        scope: Construct,
+        id: str,
+        table: ddb.ITable,
+        enabled: bool = True,
+    ) -> None:
+        super().__init__(scope, id)
 
         # Provision GetAndParseHiScores Lambda
         handler_name = "get_and_parse_hiscores"

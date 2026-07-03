@@ -17,6 +17,9 @@ cleanup() {
 trap 'cleanup' ERR
 
 
+cyan_error "Checking types..."
+(set -x; mypy hiscores_tracker lambda)
+
 cyan_error "Running unit tests..."
 (set -x; pytest tests lambda \
     --doctest-modules \

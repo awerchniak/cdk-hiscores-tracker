@@ -21,15 +21,15 @@ class AggregatingTimeSeriesTable(Construct):
     """
 
     @property
-    def table(self):
+    def table(self) -> ddb.Table:
         return self._table
 
     @property
-    def query_api(self):
+    def query_api(self) -> apigw.LambdaRestApi:
         return self._query_api
 
-    def __init__(self, scope: Construct, id: str, **kwargs):
-        super().__init__(scope, id, **kwargs)
+    def __init__(self, scope: Construct, id: str) -> None:
+        super().__init__(scope, id)
 
         # Provision Dynamo Table: provisioned capacity, streaming enabled
         self._table = ddb.Table(

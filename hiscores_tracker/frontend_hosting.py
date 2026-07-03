@@ -25,7 +25,7 @@ class FrontendHosting(Construct):
     """
 
     @property
-    def url(self):
+    def url(self) -> str:
         return self._url
 
     def __init__(
@@ -34,10 +34,9 @@ class FrontendHosting(Construct):
         id: str,
         *,
         query_api_url: str,
-        domain_name: str = None,
-        **kwargs,
-    ):
-        super().__init__(scope, id, **kwargs)
+        domain_name: str | None = None,
+    ) -> None:
+        super().__init__(scope, id)
 
         bucket = s3.Bucket(
             self,
@@ -49,8 +48,8 @@ class FrontendHosting(Construct):
         # Custom domain is opt-in: only set up if the deployer has published
         # their own domain via the /hiscores-tracker/frontend-domain-name SSM
         # parameter. Everyone else gets the plain *.cloudfront.net domain.
-        certificate = None
-        hosted_zone = None
+        certificate: acm.ICertificate | None = None
+        hosted_zone: route53.IHostedZone | None = None
         if domain_name is not None:
             hosted_zone = route53.HostedZone.from_lookup(
                 self, "Zone", domain_name=domain_name
@@ -90,6 +89,7 @@ class FrontendHosting(Construct):
         )
 
         if domain_name is not None:
+            assert hosted_zone is not None
             alias_target = route53.RecordTarget.from_alias(
                 route53_targets.CloudFrontTarget(distribution)
             )

@@ -1,7 +1,7 @@
 import aws_cdk as cdk
 import boto3
 import botocore.exceptions
-from aws_cdk import Stack
+from aws_cdk import CfnOutput, Stack
 from aws_cdk import aws_codebuild as codebuild
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_ssm as ssm
@@ -23,7 +23,7 @@ _FRONTEND_DOMAIN_NAME_PARAM = "/hiscores-tracker/frontend-domain-name"
 _MISSING_PARAM_ERROR_CODES = {"ParameterNotFound", "AccessDeniedException"}
 
 
-def _try_get_ssm_parameter(name: str) -> str:
+def _try_get_ssm_parameter(name: str) -> str | None:
     """Resolve an SSM parameter at synth time, or None if it isn't available.
 
     Unlike ssm.StringParameter.value_from_lookup, this never fails synth when
@@ -40,15 +40,15 @@ def _try_get_ssm_parameter(name: str) -> str:
 
 class HiscoresTrackerStage(cdk.Stage):
     @property
-    def query_url(self):
+    def query_url(self) -> CfnOutput:
         return self._query_url
 
     @property
-    def trigger_url(self):
+    def trigger_url(self) -> CfnOutput:
         return self._trigger_url
 
     @property
-    def frontend_url(self):
+    def frontend_url(self) -> CfnOutput:
         return self._frontend_url
 
     def __init__(
@@ -56,18 +56,17 @@ class HiscoresTrackerStage(cdk.Stage):
         scope: Construct,
         id: str,
         enabled: bool = True,
-        stack_name: str = None,
-        domain_name: str = None,
-        **kwargs,
-    ):
-        super().__init__(scope, id, **kwargs)
-        stack_kwargs = {"stack_name": stack_name} if stack_name is not None else {}
+        stack_name: str | None = None,
+        domain_name: str | None = None,
+        env: cdk.Environment | None = None,
+    ) -> None:
+        super().__init__(scope, id, env=env)
         stack = HiscoresTrackerStack(
             self,
             "HiscoresTrackerStack",
             enabled=enabled,
             domain_name=domain_name,
-            **stack_kwargs,
+            stack_name=stack_name,
         )
         self._query_url = stack.query_url_output
         self._trigger_url = stack.trigger_url_output
@@ -75,8 +74,10 @@ class HiscoresTrackerStage(cdk.Stage):
 
 
 class PipelineStack(Stack):
-    def __init__(self, scope: Construct, id: str, **kwargs):
-        super().__init__(scope, id, **kwargs)
+    def __init__(
+        self, scope: Construct, id: str, env: cdk.Environment | None = None
+    ) -> None:
+        super().__init__(scope, id, env=env)
 
         connection_arn = ssm.StringParameter.value_from_lookup(
             self, "/hiscores-tracker/github-connection-arn"

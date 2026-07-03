@@ -1,9 +1,10 @@
 import aggregator.lib.dynamo_aggregator.util as util
 import pytest
+from aggregator.lib.dynamo_aggregator.util import NestedIntDict
 
 
-def test_aggregate_dictlikes():
-    a = {
+def test_aggregate_dictlikes() -> None:
+    a: NestedIntDict = {
         "hi": {
             "hello": {
                 "sup": 10,
@@ -18,7 +19,7 @@ def test_aggregate_dictlikes():
             "sup": 7,
         },
     }
-    b = {
+    b: NestedIntDict = {
         "hi": {
             "hello": {
                 "sup": 3,
@@ -53,22 +54,23 @@ def test_aggregate_dictlikes():
     assert result == expected
 
 
-def test_aggregate_dictlikes_incomplete_b():
+def test_aggregate_dictlikes_incomplete_b() -> None:
     with pytest.raises(util.SchemaMismatch):
         util.aggregate_dictlikes({"a": 2}, {})
 
 
-def test_aggregate_dictlikes_invalid_b():
+def test_aggregate_dictlikes_invalid_b() -> None:
     with pytest.raises(util.SchemaMismatch):
-        util.aggregate_dictlikes({"a": 2}, {"a": "two"})
+        # Deliberately mismatched leaf types, to exercise the schema check.
+        util.aggregate_dictlikes({"a": 2}, {"a": "two"})  # type: ignore[dict-item]
 
 
-def test_aggregate_hiscores_rows_none():
-    new_data = {}
+def test_aggregate_hiscores_rows_none() -> None:
+    new_data: dict[str, object] = {}
     assert util.aggregate_hiscores_rows(None, new_data) == new_data
 
 
-def test_aggregate_hiscores_rows():
+def test_aggregate_hiscores_rows() -> None:
     linted_response = {
         "divisor": 4,
         "activities": {
