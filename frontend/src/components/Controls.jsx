@@ -21,6 +21,7 @@ export default function Controls({
   startDate, onStartChange,
   endDate, onEndChange,
   granularity, onGranularityChange,
+  zoomYAxis, onZoomYAxisChange,
   onQuery, loading,
 }) {
   const rawDisabled = !!startDate && !!endDate && daysBetween(startDate, endDate) >= RAW_MAX_DAYS
@@ -172,6 +173,18 @@ export default function Controls({
             )
           })}
         </div>
+      </div>
+
+      <div className="control-group">
+        <label>Display</label>
+        <label className="checkbox-label" title="Scale the Y-axis to the visible data instead of always starting at zero">
+          <input
+            type="checkbox"
+            checked={zoomYAxis}
+            onChange={e => onZoomYAxisChange(e.target.checked)}
+          />
+          Zoom Y-axis to data
+        </label>
       </div>
 
       <button

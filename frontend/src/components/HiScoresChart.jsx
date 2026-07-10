@@ -27,7 +27,7 @@ function seriesLabel(player, itemKey, multiPlayer, multiItem) {
   return itemKey
 }
 
-export default function HiScoresChart({ data, selected, metric, category, caption }) {
+export default function HiScoresChart({ data, selected, metric, category, caption, zoomYAxis }) {
   if (data.length === 0 || selected.length === 0) {
     return (
       <div className="chart-empty">
@@ -94,6 +94,7 @@ export default function HiScoresChart({ data, selected, metric, category, captio
           <CartesianGrid strokeDasharray="3 3" stroke="#3a3a3a" />
           <XAxis dataKey="timestamp" tick={{ fill: '#e8d5a3', fontSize: 11 }} />
           <YAxis
+            domain={zoomYAxis ? ['auto', 'auto'] : [0, 'auto']}
             tickFormatter={formatValue}
             tick={{ fill: '#e8d5a3', fontSize: 11 }}
             width={60}

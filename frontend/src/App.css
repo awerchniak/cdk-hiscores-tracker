@@ -189,6 +189,16 @@ input[type="date"]:focus {
   display: block;
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #e8d5a3;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 /* ── Query button ────────────────────────────────────────────── */
 .query-btn {
   background: #5c4b1e;
