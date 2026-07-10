@@ -27,6 +27,21 @@ function seriesLabel(player, itemKey, multiPlayer, multiItem) {
   return itemKey
 }
 
+// Raw scrapes are triggered every 30 minutes (see the EventBridge cron rule
+// in hiscores_tracker/hiscores_logger.py, "OrchestratorTrigger"), but each
+// player's row lands a few seconds (or more, under queue backlog) after the
+// trigger — grouping by the exact timestamp fractures a single collection
+// cycle across several x-axis points. Bucket to the 30-minute mark the
+// scrape belongs to so rows from the same cycle line up. Daily/monthly
+// timestamps have no time-of-day component and pass through unchanged.
+function bucketTimestamp(timestamp) {
+  const match = timestamp.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2}):\d{2}$/)
+  if (!match) return timestamp
+  const [, date, hh, mm] = match
+  const bucketMinute = Number(mm) < 30 ? '00' : '30'
+  return `${date} ${hh}:${bucketMinute}:00`
+}
+
 export default function HiScoresChart({ data, selected, metric, category, caption, zoomYAxis }) {
   if (data.length === 0 || selected.length === 0) {
     return (
@@ -48,10 +63,11 @@ export default function HiScoresChart({ data, selected, metric, category, captio
 
   const chartDataByTimestamp = new Map()
   for (const item of data) {
-    if (!chartDataByTimestamp.has(item.timestamp)) {
-      chartDataByTimestamp.set(item.timestamp, { timestamp: item.timestamp })
+    const bucket = bucketTimestamp(item.timestamp)
+    if (!chartDataByTimestamp.has(bucket)) {
+      chartDataByTimestamp.set(bucket, { timestamp: bucket })
     }
-    const point = chartDataByTimestamp.get(item.timestamp)
+    const point = chartDataByTimestamp.get(bucket)
     for (const key of selected) {
       const val = item[category]?.[key]?.[metric]
       if (val != null) {
