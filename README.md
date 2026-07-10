@@ -142,14 +142,26 @@ aws ssm put-parameter \
 
 If this parameter is absent, the frontend is served at the default CloudFront domain and nothing else changes — this step is entirely optional. If it's present, the next pipeline run (or `cdk deploy`) automatically requests and validates an ACM certificate, attaches it and the domain as a CloudFront alias, and creates the Route 53 records pointing the domain at the distribution.
 
-## Clone and configure the repo
+## Fork, clone, and configure the repo
+
+The CodeStar connection you created above can only ever pull from repos your GitHub identity administers, so you'll need your own fork rather than deploying straight from this repo. [Fork this repository on GitHub](https://github.com/awerchniak/cdk-hiscores-tracker/fork), then clone your fork:
 
 ```bash
-git clone https://github.com/awerchniak/cdk-hiscores-tracker.git
+git clone https://github.com/YOUR-GITHUB-USERNAME/cdk-hiscores-tracker.git
 cd cdk-hiscores-tracker
 ```
 
+In `hiscores_tracker/pipeline_stack.py`, update the hardcoded repo slug passed to `pipelines.CodePipelineSource.connection(...)` from `"awerchniak/cdk-hiscores-tracker"` to your fork's `owner/repo` slug. (This is tracked as a manual step for now — see [issue #39](https://github.com/awerchniak/cdk-hiscores-tracker/issues/39) for the plan to move this to an SSM parameter instead.)
+
 Edit `lambda/orchestrator/players.txt` to list the usernames you want to track (one per line, minimum 1).
+
+Commit and push both changes to your fork's `mainline` branch. The pipeline syncs from `mainline` on your fork, not from your local disk, so it won't pick up either edit until they're pushed:
+
+```bash
+git add hiscores_tracker/pipeline_stack.py lambda/orchestrator/players.txt
+git commit -m "Configure my fork and player list"
+git push origin mainline
+```
 
 ## Deploy the pipeline
 
