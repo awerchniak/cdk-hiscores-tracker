@@ -85,6 +85,7 @@ export const ACTIVITIES = [
   { key: 'LMS_Rank', label: 'LMS - Rank' },
   { key: 'LeaguePoints', label: 'League Points' },
   { key: 'LunarChests', label: 'Lunar Chests' },
+  { key: 'Maggot_King', label: 'Maggot King' },
   { key: 'Mimic', label: 'Mimic' },
   { key: 'Nex', label: 'Nex' },
   { key: 'Nightmare', label: 'Nightmare' },
