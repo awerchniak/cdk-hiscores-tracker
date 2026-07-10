@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { PLAYERS } from '../constants'
 
 const RAW_MAX_DAYS = 7
@@ -17,13 +17,16 @@ function daysBetween(startDate, endDate) {
 }
 
 export default function Controls({
-  player, onPlayerChange,
+  players, onPlayersChange,
   startDate, onStartChange,
   endDate, onEndChange,
   granularity, onGranularityChange,
   onQuery, loading,
 }) {
   const rawDisabled = !!startDate && !!endDate && daysBetween(startDate, endDate) >= RAW_MAX_DAYS
+  const [playerInput, setPlayerInput] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [highlighted, setHighlighted] = useState(0)
 
   useEffect(() => {
     if (rawDisabled && granularity === 'raw') {
@@ -31,21 +34,93 @@ export default function Controls({
     }
   }, [rawDisabled, granularity, onGranularityChange])
 
+  const filteredPlayers = PLAYERS.filter(p =>
+    !players.includes(p) && p.toLowerCase().includes(playerInput.trim().toLowerCase())
+  )
+
+  const addPlayer = name => {
+    if (!name || players.includes(name)) return
+    onPlayersChange([...players, name])
+    setPlayerInput('')
+    setHighlighted(0)
+  }
+
+  const removePlayer = name => {
+    onPlayersChange(players.filter(p => p !== name))
+  }
+
+  const handlePlayerKeyDown = e => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (filteredPlayers[highlighted]) addPlayer(filteredPlayers[highlighted])
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setDropdownOpen(true)
+      setHighlighted(h => Math.min(h + 1, filteredPlayers.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlighted(h => Math.max(h - 1, 0))
+    } else if (e.key === 'Escape') {
+      setDropdownOpen(false)
+    } else if (e.key === 'Backspace' && !playerInput && players.length > 0) {
+      removePlayer(players[players.length - 1])
+    }
+  }
+
   return (
     <div className="controls">
       <div className="control-group">
-        <label htmlFor="player">Player</label>
-        <input
-          id="player"
-          type="text"
-          value={player}
-          onChange={e => onPlayerChange(e.target.value)}
-          list="players-list"
-          placeholder="Enter player name…"
-        />
-        <datalist id="players-list">
-          {PLAYERS.map(p => <option key={p} value={p} />)}
-        </datalist>
+        <label htmlFor="player">Players</label>
+        <div className="player-combobox">
+          <div className="player-chips">
+            {players.map(p => (
+              <span key={p} className="player-chip">
+                {p}
+                <button
+                  type="button"
+                  className="player-chip-remove"
+                  onClick={() => removePlayer(p)}
+                  aria-label={`Remove ${p}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <input
+              id="player"
+              type="text"
+              value={playerInput}
+              onChange={e => {
+                setPlayerInput(e.target.value)
+                setHighlighted(0)
+                setDropdownOpen(true)
+              }}
+              onFocus={() => setDropdownOpen(true)}
+              onBlur={() => setDropdownOpen(false)}
+              onKeyDown={handlePlayerKeyDown}
+              placeholder={players.length ? 'Add another…' : 'Select a player…'}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={dropdownOpen}
+            />
+          </div>
+          {dropdownOpen && filteredPlayers.length > 0 && (
+            <ul className="player-dropdown">
+              {filteredPlayers.map((p, i) => (
+                <li
+                  key={p}
+                  className={`player-option${i === highlighted ? ' highlighted' : ''}`}
+                  // onMouseDown fires before the input's onBlur, so the click
+                  // still registers before the dropdown closes.
+                  onMouseDown={e => { e.preventDefault(); addPlayer(p) }}
+                  onMouseEnter={() => setHighlighted(i)}
+                >
+                  {p}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <div className="control-group">
@@ -102,7 +177,7 @@ export default function Controls({
       <button
         className="query-btn"
         onClick={onQuery}
-        disabled={loading || !player || !startDate || !endDate}
+        disabled={loading || players.length === 0 || !startDate || !endDate}
       >
         {loading ? 'Loading…' : 'Query'}
       </button>

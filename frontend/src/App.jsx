@@ -27,7 +27,7 @@ function sixMonthsAgo() {
 }
 
 export default function App() {
-  const [player, setPlayer]           = useState('Plinybis')
+  const [players, setPlayers]         = useState(['Plinybis'])
   const [startDate, setStartDate]     = useState(sixMonthsAgo)
   const [endDate, setEndDate]         = useState(() => toDateInput(new Date()))
   const [granularity, setGranularity] = useState('auto')
@@ -46,20 +46,29 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
-      const result = await fetchHiScores(player, startDate, endDate, granularity)
-      setData(result)
+      const results = await Promise.all(
+        players.map(p => fetchHiScores(p, startDate, endDate, granularity))
+      )
+      setData(results.flat())
     } catch (e) {
       setError(e.message)
       setData([])
     } finally {
       setLoading(false)
     }
-  }, [player, startDate, endDate, granularity])
+  }, [players, startDate, endDate, granularity])
 
   const isSkills    = activeTab === 'Skills'
   const selected    = isSkills ? selectedSkills    : selectedActivities
   const metric      = isSkills ? skillMetric       : activityMetric
   const category    = isSkills ? 'skills'          : 'activities'
+
+  const items       = isSkills ? SKILLS        : ACTIVITIES
+  const metricLabel = (isSkills ? SKILL_METRICS : ACTIVITY_METRICS)
+    .find(m => m.value === metric)?.label ?? metric
+  const caption     = selected.length > 0
+    ? `${selected.map(key => items.find(i => i.key === key)?.label ?? key).join(', ')} — ${metricLabel}`
+    : ''
 
   return (
     <div className="app">
@@ -68,7 +77,7 @@ export default function App() {
       </header>
 
       <Controls
-        player={player}           onPlayerChange={setPlayer}
+        players={players}         onPlayersChange={setPlayers}
         startDate={startDate}     onStartChange={setStartDate}
         endDate={endDate}         onEndChange={setEndDate}
         granularity={granularity} onGranularityChange={setGranularity}
@@ -118,6 +127,7 @@ export default function App() {
             selected={selected}
             metric={metric}
             category={category}
+            caption={caption}
           />
         </div>
       </div>
