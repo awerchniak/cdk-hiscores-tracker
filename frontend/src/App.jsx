@@ -31,6 +31,7 @@ export default function App() {
   const [startDate, setStartDate]     = useState(sixMonthsAgo)
   const [endDate, setEndDate]         = useState(() => toDateInput(new Date()))
   const [granularity, setGranularity] = useState('auto')
+  const [zoomYAxis, setZoomYAxis]     = useState(true)
 
   const [activeTab, setActiveTab]             = useState('Skills')
   const [selectedSkills, setSelectedSkills]   = useState(['Overall'])
@@ -81,6 +82,7 @@ export default function App() {
         startDate={startDate}     onStartChange={setStartDate}
         endDate={endDate}         onEndChange={setEndDate}
         granularity={granularity} onGranularityChange={setGranularity}
+        zoomYAxis={zoomYAxis}     onZoomYAxisChange={setZoomYAxis}
         onQuery={handleQuery}     loading={loading}
       />
 
@@ -128,6 +130,7 @@ export default function App() {
             metric={metric}
             category={category}
             caption={caption}
+            zoomYAxis={zoomYAxis}
           />
         </div>
       </div>
