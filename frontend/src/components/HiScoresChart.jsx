@@ -27,12 +27,13 @@ function seriesLabel(player, itemKey, multiPlayer, multiItem) {
   return itemKey
 }
 
-// Raw scrapes are triggered every 30 minutes, but each player's row lands a
-// few seconds (or more, under queue backlog) after the trigger — grouping by
-// the exact timestamp fractures a single collection cycle across several
-// x-axis points. Bucket to the 30-minute mark the scrape belongs to so rows
-// from the same cycle line up. Daily/monthly timestamps have no time-of-day
-// component and pass through unchanged.
+// Raw scrapes are triggered every 30 minutes (see the EventBridge cron rule
+// in hiscores_tracker/hiscores_logger.py, "OrchestratorTrigger"), but each
+// player's row lands a few seconds (or more, under queue backlog) after the
+// trigger — grouping by the exact timestamp fractures a single collection
+// cycle across several x-axis points. Bucket to the 30-minute mark the
+// scrape belongs to so rows from the same cycle line up. Daily/monthly
+// timestamps have no time-of-day component and pass through unchanged.
 function bucketTimestamp(timestamp) {
   const match = timestamp.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2}):\d{2}$/)
   if (!match) return timestamp
