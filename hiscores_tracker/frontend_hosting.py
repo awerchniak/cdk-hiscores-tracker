@@ -121,6 +121,15 @@ class FrontendHosting(Construct):
                         image=DockerImage.from_registry(
                             "public.ecr.aws/docker/library/node:22-alpine"
                         ),
+                        # CDK runs the container as the host UID/GID to avoid
+                        # leaving root-owned files on the host. That UID has
+                        # no passwd entry (and thus no $HOME) in the alpine
+                        # image unless it happens to match the image's built-
+                        # in "node" user (uid 1000, e.g. typical Linux
+                        # hosts) -- on macOS (uid 501+) npm falls back to the
+                        # unwritable /.npm. Pin HOME explicitly so it works
+                        # regardless of host UID.
+                        environment={"HOME": "/tmp"},
                         command=[
                             "sh",
                             "-c",
