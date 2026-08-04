@@ -9,57 +9,6 @@ OSRS HiScores Tracking with AWS CDK
 
 This project helps OSRS players to track and visualize their in-game progress using the HiScores API. It is built on Amazon Web Services and is easily bootstrapped using AWS CDK. As such, having an AWS account and the AWS CLI installed is a prerequisite.
 
-
-# Service overview
-
-<img src="./assetts/service_diagram.png" width=1000 />
-
-The core service is built on two Constructs: `HiScoresLogger` and `AggregatingTimeSeriesTable`. 
-
-The first uses a CloudWatch EventBridge to trigger an Orchestrator Lambda, which reads your configuration file and sends instruction messages to an SQS Queue. A Lambda Function listens to this queue, and when it receives a request for a username, it queries the HiScores API, parses the response, and saves it to a table.
-
-The second is a DynamoDB Table with a Lambda Function subscribed to write events. When the table is written to, the Lambda aggregates the new record into a daily sum row. The table also comes with a query Lambda Function and API Gateway Endpoint for easy reading with configurable daily aggregation.
-
-## Frontend
-
-A React + Vite web app (`frontend/`) is included for querying and visualizing the stored data. It is hosted on a private S3 bucket behind a CloudFront distribution, deployed as part of the CDK stack via the `FrontendHosting` construct.
-
-Features:
-- Player selector with autocomplete, date range picker, and granularity control (Auto / Monthly / Daily / Raw)
-- Skills and Activities tabs with multi-select and per-metric charting (XP, Level, Rank, Kill Count)
-- Line chart powered by Recharts with an OSRS-themed dark UI
-
-The app discovers the query API URL at runtime by fetching `/config.json`, which CDK writes to the S3 bucket at deploy time. This means no API URL needs to be baked into the build.
-
-After deployment the frontend URL is available as a CloudFormation output:
-
-```
-HiscoresTrackerStack.FrontendUrl = https://<id>.cloudfront.net
-```
-
-### Local development
-
-```bash
-cd frontend
-cp .env.local.example .env.local
-# Edit .env.local and set VITE_API_URL to your query API Gateway URL
-npm install
-npm run dev
-```
-
-Then open `http://localhost:5173` in your browser.
-
-# CI/CD Architecture
-
-Deployments are managed by a self-mutating AWS CodePipeline. Every push to `mainline` triggers a full pipeline run:
-
-1. **Synth** — CDK synthesizes CloudFormation templates from source.
-2. **Beta** — A full isolated copy of the stack is deployed. The EventBridge schedule is disabled so it never polls the live HiScores API.
-3. **Integration Tests** — A smoke test triggers the ingest API and verifies data is returned by the query API. This stage must pass before production is updated.
-4. **Prod** — The production `HiscoresTrackerStack` is updated in-place, preserving all existing DynamoDB data.
-
-The pipeline is self-mutating: changes to the pipeline definition itself are applied automatically on the next run.
-
 # Getting Started
 
 You can create an instance of this service for yourself using AWS CDK. The initial setup deploys the pipeline; all subsequent changes deploy automatically on push.
@@ -80,10 +29,14 @@ mise install
 
 `mise install` reads `.mise.toml` at the repo root and installs the correct versions automatically.
 
-### 2. Create a free-tier AWS account
+### 2. Install Docker
+
+The frontend is built inside a Docker container as part of `cdk synth`/`cdk deploy` (and therefore also when running unit tests locally, since they synthesize the stack). Install [Docker Desktop](https://docs.docker.com/desktop/) and make sure the daemon is running before continuing. To verify: `docker info`.
+
+### 3. Create a free-tier AWS account
 If you don't already have one, go to https://aws.amazon.com/free and sign up.
 
-### 3. Configure permissions
+### 4. Configure permissions
 You will need to create a new IAM policy to deploy this application. After creating your account, navigate to IAM within the AWS management console. Create a new policy with the following permissions:
 * IAMFullAccess
 * AWSCodeDeployFullAccess
@@ -92,13 +45,13 @@ You will need to create a new IAM policy to deploy this application. After creat
 
 Now, create a new IAM group and attach this policy to it. Following this, create a user in the group for yourself.
 
-### 4. Install the AWS CLI
+### 5. Install the AWS CLI
 Follow [these instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). To verify that it works: `which aws`.
 
-### 5. Configure the AWS CLI
+### 6. Configure the AWS CLI
 With the IAM user you created above, follow [these instructions](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds) to configure your AWS CLI.
 
-### 6. Install the CDK CLI
+### 7. Install the CDK CLI
 
 ```bash
 npm install -g aws-cdk
@@ -106,7 +59,7 @@ npm install -g aws-cdk
 
 This must be run after `mise install` so the CDK CLI is installed under the pinned Node version.
 
-### 7. Create a GitHub CodeStar connection
+### 8. Create a GitHub CodeStar connection
 
 The pipeline pulls source from GitHub. Create a connection in the AWS console under **CodePipeline → Settings → Connections**, or via the CLI:
 
@@ -118,7 +71,7 @@ aws codestar-connections create-connection \
 
 Complete the OAuth handshake in the console to move the connection from `PENDING` to `AVAILABLE`. Copy the resulting connection ARN.
 
-### 8. Store the connection ARN in SSM Parameter Store
+### 9. Store the connection ARN in SSM Parameter Store
 
 ```bash
 aws ssm put-parameter \
@@ -129,7 +82,7 @@ aws ssm put-parameter \
 
 The pipeline reads this value at synth time so the ARN is never committed to source.
 
-### 9. (Optional) Point a custom domain at the frontend
+### 10. (Optional) Point a custom domain at the frontend
 
 If you own a public Route 53 hosted zone in this account and want the frontend served at your own domain instead of the default `*.cloudfront.net` URL, store the domain name in SSM:
 
@@ -201,6 +154,56 @@ cdk destroy HiscoresPipelineStack
 ```
 
 Note: this will also remove the Beta and Prod stacks managed by the pipeline. The Prod DynamoDB table has deletion protection; you will need to disable it manually before the destroy completes.
+
+# Service overview
+
+<img src="./assetts/service_diagram.png" width=1000 />
+
+The core service is built on two Constructs: `HiScoresLogger` and `AggregatingTimeSeriesTable`. 
+
+The first uses a CloudWatch EventBridge to trigger an Orchestrator Lambda, which reads your configuration file and sends instruction messages to an SQS Queue. A Lambda Function listens to this queue, and when it receives a request for a username, it queries the HiScores API, parses the response, and saves it to a table.
+
+The second is a DynamoDB Table with a Lambda Function subscribed to write events. When the table is written to, the Lambda aggregates the new record into a daily sum row. The table also comes with a query Lambda Function and API Gateway Endpoint for easy reading with configurable daily aggregation.
+
+## Frontend
+
+A React + Vite web app (`frontend/`) is included for querying and visualizing the stored data. It is hosted on a private S3 bucket behind a CloudFront distribution, deployed as part of the CDK stack via the `FrontendHosting` construct.
+
+Features:
+- Player selector with autocomplete, date range picker, and granularity control (Auto / Monthly / Daily / Raw)
+- Skills and Activities tabs with multi-select and per-metric charting (XP, Level, Rank, Kill Count)
+- Line chart powered by Recharts with an OSRS-themed dark UI
+
+The app discovers the query API URL at runtime by fetching `/config.json`, which CDK writes to the S3 bucket at deploy time. This means no API URL needs to be baked into the build.
+
+After deployment the frontend URL is available as a CloudFormation output:
+
+```
+HiscoresTrackerStack.FrontendUrl = https://<id>.cloudfront.net
+```
+
+### Local development
+
+```bash
+cd frontend
+cp .env.local.example .env.local
+# Edit .env.local and set VITE_API_URL to your query API Gateway URL
+npm install
+npm run dev
+```
+
+Then open `http://localhost:5173` in your browser.
+
+# CI/CD Architecture
+
+Deployments are managed by a self-mutating AWS CodePipeline. Every push to `mainline` triggers a full pipeline run:
+
+1. **Synth** — CDK synthesizes CloudFormation templates from source.
+2. **Beta** — A full isolated copy of the stack is deployed. The EventBridge schedule is disabled so it never polls the live HiScores API.
+3. **Integration Tests** — A smoke test triggers the ingest API and verifies data is returned by the query API. This stage must pass before production is updated.
+4. **Prod** — The production `HiscoresTrackerStack` is updated in-place, preserving all existing DynamoDB data.
+
+The pipeline is self-mutating: changes to the pipeline definition itself are applied automatically on the next run.
 
 # Contributing
 

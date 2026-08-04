@@ -12,7 +12,8 @@ cyan_error() {
 
 cleanup() {
     set +x; cyan_error "Cleaning pycaches..."
-    set -x; py3clean hiscores_tracker lambda tests
+    set -x; find hiscores_tracker lambda tests \
+        \( -name '__pycache__' -o -name '*.pyc' \) -exec rm -rf {} +
 }
 trap 'cleanup' ERR
 
