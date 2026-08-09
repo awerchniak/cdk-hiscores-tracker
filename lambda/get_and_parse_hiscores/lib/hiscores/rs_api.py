@@ -4,6 +4,7 @@ import json
 import logging
 import re
 from datetime import datetime, timedelta
+from typing import TypedDict, cast
 
 import requests
 
@@ -21,6 +22,53 @@ __all__ = [
     "request_hiscores",
     "process_hiscores_response",
 ]
+
+
+class SkillEntry(TypedDict):
+    """A single skill entry as returned by the HiScores JSON API."""
+
+    id: int
+    name: str
+    rank: int
+    level: int
+    xp: int
+
+
+class ActivityEntry(TypedDict):
+    """A single activity entry as returned by the HiScores JSON API."""
+
+    id: int
+    name: str
+    rank: int
+    score: int
+
+
+class HiscoresApiResponse(TypedDict):
+    """Raw response payload from the HiScores JSON API."""
+
+    name: str
+    skills: list[SkillEntry]
+    activities: list[ActivityEntry]
+
+
+class SkillStats(TypedDict):
+    rnk: int
+    lvl: int
+    xp: int
+
+
+class ActivityStats(TypedDict):
+    rnk: int
+    kc: int
+
+
+class ProcessedHiscoresPayload(TypedDict):
+    """HiScores data in the format written to the DynamoDB table."""
+
+    player: str
+    skills: dict[str, SkillStats]
+    activities: dict[str, ActivityStats]
+    timestamp: str
 
 
 class InvalidSchemaError(Exception):
@@ -63,7 +111,7 @@ def get_hiscores_api(player: str) -> str:
 
 
 def request_hiscores(
-    player: str, warn_secs: int = 10, timeout: float = 60.0, **kwargs
+    player: str, warn_secs: int = 10, timeout: float = 60.0
 ) -> requests.models.Response:
     """Call hiscore_oldscool API to request stats for a given player."""
     try:
@@ -71,7 +119,6 @@ def request_hiscores(
             get_hiscores_api(player=player),
             params={"player": player},
             timeout=timeout,
-            **kwargs,
         )
     except requests.exceptions.ReadTimeout as e:
         raise HiscoresDownError(
@@ -95,47 +142,49 @@ def request_hiscores(
     return response
 
 
-def process_hiscores_response(response: requests.models.Response) -> dict:
+def process_hiscores_response(
+    response: requests.models.Response,
+) -> ProcessedHiscoresPayload:
     """Read hiscores API response into human-readable format.
 
     Unfortunately, `RANK`, `LEVEL`, and `COUNT` are all reserved words in DynamoDB:
     https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ReservedWords.html
 
     This is why we use rnk, lvl, xp, kc.
-
-    TODO: create pydantic models instead of these typeless dicts
     """
 
     try:
-        payload = response.json()
+        payload = cast(HiscoresApiResponse, response.json())
     except json.decoder.JSONDecodeError:
         raise HiscoresDownError(f"Hiscores API returned invalid JSON: {response.text}")
 
     try:
-        processed_payload = dict()
-        processed_payload["player"] = payload["name"]
+        skills: dict[str, SkillStats] = {
+            _safe_skill_name(skill["name"]): {
+                "rnk": skill["rank"],
+                "lvl": skill["level"],
+                "xp": skill["xp"],
+            }
+            for skill in payload["skills"]
+        }
 
-        processed_payload["skills"] = dict()
-        for skill in payload["skills"]:
-            processed_payload["skills"][_safe_skill_name(skill["name"])] = dict(
-                rnk=skill["rank"],
-                lvl=skill["level"],
-                xp=skill["xp"],
-            )
+        activities: dict[str, ActivityStats] = {
+            _safe_activity_name(activity["name"]): {
+                "rnk": activity["rank"],
+                "kc": activity["score"],
+            }
+            for activity in payload["activities"]
+        }
 
-        processed_payload["activities"] = dict()
-        for activity in payload["activities"]:
-            processed_payload["activities"][_safe_activity_name(activity["name"])] = (
-                dict(
-                    rnk=activity["rank"],
-                    kc=activity["score"],
-                )
-            )
+        player = payload["name"]
     except (AttributeError, KeyError, TypeError):
         raise HiscoresDownError(
             f"Hiscores API returned unexpected JSON format: {response.text}"
         )
 
-    processed_payload["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    return processed_payload
+    return {
+        "player": player,
+        "skills": skills,
+        "activities": activities,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }

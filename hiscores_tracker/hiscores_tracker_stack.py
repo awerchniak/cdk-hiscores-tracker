@@ -1,3 +1,4 @@
+import aws_cdk as cdk
 from aws_cdk import CfnOutput, Stack
 from aws_cdk import aws_apigateway as apigw
 from constructs import Construct
@@ -11,27 +12,27 @@ class HiscoresTrackerStack(Stack):
     """Track your OldSchoolRuneScape HiScores metrics over time."""
 
     @property
-    def query_url(self):
+    def query_url(self) -> str:
         return self._query_url
 
     @property
-    def trigger_url(self):
+    def trigger_url(self) -> str:
         return self._trigger_url
 
     @property
-    def frontend_url(self):
+    def frontend_url(self) -> str:
         return self._frontend_url
 
     @property
-    def query_url_output(self):
+    def query_url_output(self) -> CfnOutput:
         return self._query_url_output
 
     @property
-    def trigger_url_output(self):
+    def trigger_url_output(self) -> CfnOutput:
         return self._trigger_url_output
 
     @property
-    def frontend_url_output(self):
+    def frontend_url_output(self) -> CfnOutput:
         return self._frontend_url_output
 
     def __init__(
@@ -39,11 +40,12 @@ class HiscoresTrackerStack(Stack):
         scope: Construct,
         construct_id: str,
         enabled: bool = True,
-        domain_name: str = None,
-        **kwargs,
+        domain_name: str | None = None,
+        stack_name: str | None = None,
+        env: cdk.Environment | None = None,
     ) -> None:
 
-        super().__init__(scope, construct_id, **kwargs)
+        super().__init__(scope, construct_id, stack_name=stack_name, env=env)
 
         # Provision HiScores AggregatingTimeSeriesTable
         atst = AggregatingTimeSeriesTable(self, "HiScoresATST")

@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import json
 import logging
 import os
+from typing import TYPE_CHECKING, cast
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -24,6 +27,11 @@ from read_hiscores_table.lib.name_corrections import (
     resolve_aliases,
 )
 
+if TYPE_CHECKING:
+    from aws_lambda_typing.context import Context
+    from aws_lambda_typing.events import APIGatewayProxyEventV1
+    from aws_lambda_typing.responses import APIGatewayProxyResponseV1
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -37,7 +45,13 @@ ddb = boto3.resource("dynamodb")
 table = ddb.Table(os.environ["HISCORES_TABLE_NAME"])
 
 
-def run_table_query(player, start_time, end_time, skills=None, category=None):
+def run_table_query(
+    player: str,
+    start_time: str,
+    end_time: str,
+    skills: list[str] | None = None,
+    category: str | None = None,
+) -> dict[str, object] | list[dict[str, object]]:
     """Query HiScores table for a player, start time, and end time."""
 
     try:
@@ -63,7 +77,7 @@ def run_table_query(player, start_time, end_time, skills=None, category=None):
         f"{query_boundaries[0]} and {query_boundaries[1]}"
     )
 
-    items = []
+    items: list[dict[str, object]] = []
     for alias in sorted(aliases):
         if skills and category:
             logger.info(f"Limiting query to category '{category}' and skills {skills}")
@@ -83,7 +97,7 @@ def run_table_query(player, start_time, end_time, skills=None, category=None):
             )
         for item in response["Items"]:
             item["player"] = canonical_player
-            items.append(item)
+            items.append(cast("dict[str, object]", item))
 
     # All items in one request share the same aggregation_level (and therefore
     # the same timestamp string format), since aggregation_level is derived once
@@ -94,7 +108,7 @@ def run_table_query(player, start_time, end_time, skills=None, category=None):
     # aggregate); merge_period_collisions combines them (sum skills/activities/
     # divisor) before lint_items divides, producing one correctly-weighted row.
     items = merge_period_collisions(items)
-    items.sort(key=lambda item: item["timestamp"])
+    items.sort(key=lambda item: cast(str, item["timestamp"]))
     logger.info(f"Received items: {items}")
 
     linted_items = lint_items(items, aggregation_level)
@@ -104,7 +118,9 @@ def run_table_query(player, start_time, end_time, skills=None, category=None):
     return corrected_items
 
 
-def handle_v0(event, context):
+def handle_v0(
+    event: APIGatewayProxyEventV1, context: Context
+) -> APIGatewayProxyResponseV1:
     """Handle a v0 API request."""
 
     params = event["queryStringParameters"]
@@ -183,7 +199,9 @@ def handle_v0(event, context):
     }
 
 
-def handle_legacy(event, context):
+def handle_legacy(
+    event: APIGatewayProxyEventV1, context: Context
+) -> APIGatewayProxyResponseV1:
     """Handle a legacy API request."""
     params = event["queryStringParameters"]
     if not isinstance(params, dict) or "sql" not in params:
@@ -212,8 +230,12 @@ def handle_legacy(event, context):
     )
 
     logger.info(f"Received query result: {query_result}")
+    # The legacy endpoint's SQL-derived start/end times are always well-formed,
+    # so run_table_query never takes its 400-dict error path here.
     formatted_query_result = format_legacy_response(
-        query_result, parsed_fields["skills"], parsed_fields["category"]
+        cast("list[dict[str, object]]", query_result),
+        parsed_fields["skills"],
+        parsed_fields["category"],
     )
 
     logger.info(f"Formatted query result: '{formatted_query_result}'")
@@ -227,7 +249,9 @@ def handle_legacy(event, context):
     }
 
 
-def handler(event, context):
+def handler(
+    event: APIGatewayProxyEventV1, context: Context
+) -> APIGatewayProxyResponseV1:
     """Handle a GET request.
 
     The endpoint has two possible paths:

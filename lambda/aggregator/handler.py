@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import logging
 import os
 from datetime import datetime
+from typing import TYPE_CHECKING, cast
 
 import boto3
 from aggregator.lib.dynamo_aggregator.util import (
@@ -9,6 +12,14 @@ from aggregator.lib.dynamo_aggregator.util import (
     parse_image,
     unroll_image,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from aggregator.lib.dynamo_aggregator.util import ScalarTree
+    from aws_lambda_typing.context import Context
+    from aws_lambda_typing.events import DynamoDBStreamEvent
+    from mypy_boto3_dynamodb.type_defs import TableAttributeValueTypeDef
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -23,17 +34,19 @@ DATE = "%Y-%m-%d"
 MONTH = "%Y-%m"
 
 
-def _timestamp_to_date(timestamp):
+def _timestamp_to_date(timestamp: str) -> str:
     """Parse a date from a timestamp."""
     return datetime.strptime(timestamp, TIMESTAMP).strftime(DATE)
 
 
-def _timestamp_to_month(timestamp):
+def _timestamp_to_month(timestamp: str) -> str:
     """Parse a month from a timestamp."""
     return datetime.strptime(timestamp, TIMESTAMP).strftime(MONTH)
 
 
-def aggregate(image, interval="daily"):
+def aggregate(
+    image: Mapping[str, object], interval: str = "daily"
+) -> dict[str, object]:
     player_id, timestamp = parse_image(image)
 
     if interval == "daily":
@@ -55,18 +68,22 @@ def aggregate(image, interval="daily"):
     resp = table.get_item(Key=key)
     logger.info(f"Received response {resp}")
 
-    linted_resp = lint_query_response(resp.get("Item"))
+    linted_resp = lint_query_response(cast("ScalarTree | None", resp.get("Item")))
     logger.info(f"Linted response: {linted_resp}")
 
-    new_item = aggregate_hiscores_rows(linted_resp, unrolled_new_image)
+    new_item = aggregate_hiscores_rows(
+        cast("dict[str, object] | None", linted_resp), unrolled_new_image
+    )
     logger.info(f"Produced aggregation {new_item}")
 
-    table.put_item(Item=new_item)
+    table.put_item(Item=cast("Mapping[str, TableAttributeValueTypeDef]", new_item))
 
     return new_item
 
 
-def handler(event, context):
+def handler(
+    event: DynamoDBStreamEvent, context: Context
+) -> tuple[dict[str, object], dict[str, object]] | None:
     event_name = event["Records"][0]["eventName"]
     event_source = event["Records"][0]["eventSource"]
     logger.info(f"Processing Event '{event_name}' from source '{event_source}'.")
@@ -76,10 +93,10 @@ def handler(event, context):
         _, timestamp = parse_image(new_image)
         if timestamp.startswith(DAILY_SENTINEL):
             logger.info("Ignoring event from daily aggregation write.")
-            return
+            return None
         if timestamp.startswith(MONTHLY_SENTINEL):
             logger.info("Ignoring event from monthly aggregation write.")
-            return
+            return None
 
         logger.info(f"Received image: {new_image}")
 
@@ -92,3 +109,4 @@ def handler(event, context):
         return daily, monthly
     else:
         logger.info("Ignoring non-insert event.")
+        return None

@@ -5,12 +5,12 @@ import pytest
 import read_hiscores_table.lib.aggregation_queryer.util as util
 
 
-def test_custom_encoder():
+def test_custom_encoder() -> None:
     d = {"decimal": decimal.Decimal("10"), "level": util.AggregationLevel.NONE}
     json.dumps(d, cls=util.CustomEncoder)
 
 
-def daily_items():
+def daily_items() -> list[dict[str, object]]:
     return [
         {
             "timestamp": util.DAILY_SENTINEL + "2021-12-17",
@@ -49,7 +49,7 @@ def daily_items():
     ]
 
 
-def linted_daily_items():
+def linted_daily_items() -> list[dict[str, object]]:
     return [
         {
             "timestamp": "2021-12-17",
@@ -99,13 +99,17 @@ def linted_daily_items():
         ),
     ],
 )
-def test_lint_items(items, aggregation_level, expected):
+def test_lint_items(
+    items: list[dict[str, object]],
+    aggregation_level: util.AggregationLevel,
+    expected: list[dict[str, object]],
+) -> None:
     assert util.lint_items(items, aggregation_level) == expected
 
 
-def test_lint_items_invalid():
+def test_lint_items_invalid() -> None:
     with pytest.raises(ValueError):
-        util.lint_items([{}], 3)
+        util.lint_items([{}], 3)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -118,7 +122,9 @@ def test_lint_items_invalid():
         ("2020-12-01 00:00:00", "2021-12-01 00:00:00", util.AggregationLevel.MONTHLY),
     ],
 )
-def test_infer_aggregation_level(start_time, end_time, expected):
+def test_infer_aggregation_level(
+    start_time: str, end_time: str, expected: util.AggregationLevel
+) -> None:
     assert util.infer_aggregation_level(start_time, end_time) == expected
 
 
@@ -130,7 +136,9 @@ def test_infer_aggregation_level(start_time, end_time, expected):
         ("2020-12-17 00:00:00", "2021-12-17 00:00:00", util.AggregationLevel.MONTHLY),
     ],
 )
-def test_get_query_boundaries(start_time, end_time, aggregation_level):
+def test_get_query_boundaries(
+    start_time: str, end_time: str, aggregation_level: util.AggregationLevel
+) -> None:
     result = util.get_query_boundaries(start_time, end_time, aggregation_level)
     assert len(result) == 2
     if aggregation_level == util.AggregationLevel.NONE:
@@ -147,11 +155,11 @@ def test_get_query_boundaries(start_time, end_time, aggregation_level):
         )
 
 
-def test_get_query_boundaries_invalid():
+def test_get_query_boundaries_invalid() -> None:
     with pytest.raises(ValueError):
-        util.get_query_boundaries("", "", 3)
+        util.get_query_boundaries("", "", 3)  # type: ignore[arg-type]
 
 
-def test_convert_timestamp_invalid():
+def test_convert_timestamp_invalid() -> None:
     with pytest.raises(ValueError):
         util.convert_timestamp("", [])

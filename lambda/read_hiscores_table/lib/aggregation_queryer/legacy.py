@@ -1,4 +1,5 @@
 import re
+from typing import TypedDict
 
 QUERY_REGEX = (
     "SELECT timestamp,(?P<skills>.*) FROM skills.(?P<category>.*) "
@@ -12,7 +13,15 @@ CATEGORY_MAP = {
 }
 
 
-def parse_query_str(query_str):
+class ParsedQuery(TypedDict):
+    skills: list[str]
+    category: str
+    player: str
+    start_time: str
+    end_time: str
+
+
+def parse_query_str(query_str: str) -> ParsedQuery:
     """Parse skills, category, player, and date range from a legacy query. # noqa: E501
 
     Examples:
@@ -32,16 +41,18 @@ def parse_query_str(query_str):
         raise ValueError(
             f"Query string '{QUERY_REGEX}' does not match regex '{QUERY_REGEX}'"
         )
-    return dict(
-        skills=m.group("skills").split(","),
-        category=CATEGORY_MAP[m.group("category")],
-        player=m.group("player"),
-        start_time=m.group("startTime"),
-        end_time=m.group("endTime"),
-    )
+    return {
+        "skills": m.group("skills").split(","),
+        "category": CATEGORY_MAP[m.group("category")],
+        "player": m.group("player"),
+        "start_time": m.group("startTime"),
+        "end_time": m.group("endTime"),
+    }
 
 
-def format_legacy_response(response, skills, category):
+def format_legacy_response(
+    response: list[dict[str, object]], skills: list[str], category: str
+) -> list[list[object]]:
     """Format responses appropriately for legacy API.  # noqa: E501
 
     Examples:
@@ -79,9 +90,9 @@ def format_legacy_response(response, skills, category):
     [['2021-12-23', 5403638, 6262476, 4644881, 5720554, 2596132, 8109782], ['2021-12-24', 5403768, 6262585, 4644884, 5720557, 2596132, 8234596]]
     """
 
-    def format_item(item):
-        return [item["timestamp"]] + [
-            item["skills"][skill][category] for skill in skills
-        ]
+    def format_item(item: dict[str, object]) -> list[object]:
+        skills_dict = item["skills"]
+        assert isinstance(skills_dict, dict)
+        return [item["timestamp"]] + [skills_dict[skill][category] for skill in skills]
 
     return [format_item(item) for item in response]
