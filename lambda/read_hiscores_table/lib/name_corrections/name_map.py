@@ -22,6 +22,7 @@ NAME_CHANGES: Dict[str, str] = {
     # commit efc6ab9 (2024-10-05) / 0dbf6e5 (2024-11-03)
     "State Lad": "sstate",
     "sstate": "state 0",
+    "state 0": "Daddy Kenobi",
     # commit 0fc0acc (2025-04-19)
     "GI Pliny": "Plinybis",
     # commit 7b29dc0 (2025-05-03)

@@ -23,23 +23,11 @@ def test_resolve_new_name_still_returns_full_alias_set():
     assert aliases == {"GI Jobra", "DrPlingo0"}
 
 
-def test_multi_hop_chain_from_original_name():
-    # Real chain: State Lad -> sstate -> state 0
-    canonical, aliases = resolve_aliases("State Lad")
-    assert canonical == "state 0"
-    assert aliases == {"State Lad", "sstate", "state 0"}
-
-
-def test_multi_hop_chain_from_middle_name():
-    canonical, aliases = resolve_aliases("sstate")
-    assert canonical == "state 0"
-    assert aliases == {"State Lad", "sstate", "state 0"}
-
-
-def test_multi_hop_chain_from_canonical_name():
-    canonical, aliases = resolve_aliases("state 0")
-    assert canonical == "state 0"
-    assert aliases == {"State Lad", "sstate", "state 0"}
+@pytest.mark.parametrize("name", ["State Lad", "sstate", "state 0", "Daddy Kenobi"])
+def test_multi_hop_chain_from_any_name(name):
+    canonical, aliases = resolve_aliases(name)
+    assert canonical == "Daddy Kenobi"
+    assert aliases == {"State Lad", "sstate", "state 0", "Daddy Kenobi"}
 
 
 def test_independent_rename_pairs_do_not_cross_contaminate():

@@ -1,7 +1,7 @@
 export const PLAYERS = [
   'ElderPlinius', 'Brec', 'IronDethaele', 'Gooner1212',
   'IronPlinius', 'Plinybis', 'Dr Moon Law', 'TealBingo',
-  'DrPlingo0', 'state 0',
+  'DrPlingo0', 'Daddy Kenobi',
 ]
 
 export const SKILLS = [
