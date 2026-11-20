@@ -21,3 +21,4 @@ def test_known_renames_present():
     assert NAME_CHANGES["GI Pliny"] == "Plinybis"
     assert NAME_CHANGES["State Lad"] == "sstate"
     assert NAME_CHANGES["sstate"] == "state 0"
+    assert NAME_CHANGES["state 0"] == "Daddy Kenobi"
